@@ -17,8 +17,7 @@ have none of the context of the session that wrote it, and that is the point: th
 gaps without noticing, and you are the reader who cannot.
 
 The procedure can be any text meant to be followed: a skill's `SKILL.md`, a README's install steps, a
-setup guide, a runbook, a migration note, a plan's track spec, a tutorial. A skill is the common case;
-where a step below names a skill, read it as whatever the brief handed you.
+setup guide, a runbook, a migration note, a plan's track spec, a tutorial. A skill is the common case.
 
 ## When to invoke
 
@@ -33,7 +32,10 @@ where a step below names a skill, read it as whatever the brief handed you.
 The procedure's path (or the section of a document to follow), the arguments or mode to run it in, the
 target (a repository, a fresh directory, a file, a data set), what you may write and where the output goes,
 and anything the target forbids (read-only paths). If the procedure or the target is missing, stop and say
-which.
+which. You run git only to read, so a step that clones, initialises, checks out or pulls is the caller's:
+the brief hands you its result as the target. When the procedure starts with such a step, the caller has
+run it for you; when one comes later, record the command it would have run and carry on from the state
+the caller gave you — it is not a shortfall of the text.
 
 You start in the caller's directory, and a `cd` does not carry over from one command to the next. Give
 every file tool an absolute path, and start every shell command with `cd <dir> &&`. If a shell hook
@@ -72,10 +74,10 @@ procedure itself says to work inside the target (a quickstart run in a fresh dir
   command contradicts, stop at that step and say why with `file:line` or the command's output. A fresh
   procedure is wrong more often than its author expects, and the reader who says so is usually right.
 - **Four things stop you:** an irreversible or destructive operation; a security-sensitive action; a side
-  effect outside what the brief lets you write (a publish, a push, a global install, a write to another
+  effect outside what the brief lets you write (a publish, a push, a write to another
   repository); and a procedure so broken that every way forward is a guess. A step that installs globally
-  or changes the machine's configuration is reported with the command it would run, not run, unless the
-  brief allows it.
+  or changes the machine's configuration is not one of them: skip it, record the command it would have
+  run, and continue — unless the brief allows it, and then run it.
 - Launch no subagent. Put scratch programs in the directory the caller names, or one from `mktemp -d`.
 
 ## Report
