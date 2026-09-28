@@ -134,6 +134,13 @@ Apply the audit's verdicts, split by what each edit needs:
 
 What a published item must hold:
 
+- **An agent's guard moves out of its frontmatter.** Claude Code ignores `hooks`, `mcpServers` and
+  `permissionMode` on a plugin agent, with no warning, so a guard written there ships as nothing. Ship it as
+  the plugin's own `hooks/hooks.json` `PreToolUse` hook that acts only when the payload's `agent_type`
+  names the agent — `<plugin>:<agent>` for a plugin agent — and lets every other call through. A plugin
+  agent's `skills:` preload names a skill in the same scoped form, `<plugin>:<skill>`. Prove both after
+  installing: dispatch the agent to attempt a command its guard must refuse, and ask it to quote the first
+  line of the preloaded skill without reading any file.
 - **It works without the plugin's agents.** A skills-only install (`npx skills add`) carries no agents and
   no hooks; where a skill mentions an agent, it says what to do without it. State what a hookless install
   loses.
