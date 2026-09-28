@@ -98,3 +98,23 @@ test("a transcript still being written is flagged running and judged on nothing 
   assert.equal(r.running, true)
   assert.deepEqual(r.flags, ["running?"])
 })
+
+test("a plugin-qualified subagent_type (`delegation:reviewer`) is counted for a definition named `reviewer`", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agent-runs-plugin-"))
+  const proj = path.join(root, "proj")
+  const def = path.join(root, "reviewer.md")
+  fs.writeFileSync(def, "---\nname: reviewer\nmodel: sonnet\nmaxTurns: 4\n---\nbody\n")
+  const main = jsonl([
+    { timestamp: "2026-09-26T10:00:00Z", message: { role: "assistant", content: [use("call1", "Agent", { subagent_type: "delegation:reviewer", prompt: "p" })] } },
+    user([{ type: "tool_result", tool_use_id: "call1", content: "Async agent launched.\nagentId: def456" }]),
+  ])
+  fs.mkdirSync(path.join(proj, "sess", "subagents"), { recursive: true })
+  fs.writeFileSync(path.join(proj, "sess.jsonl"), main)
+  fs.writeFileSync(path.join(proj, "sess", "subagents", "agent-def456.jsonl"), jsonl([
+    assistant("m1", [{ type: "text", text: "Rulings: none" }]),
+  ]))
+  const runs = JSON.parse(execFileSync("node", [script, `--projects=${root}`, "--days=3650", "--json", def], { encoding: "utf8" }))
+  assert.equal(runs.length, 1)
+  assert.equal(runs[0].name, "reviewer")
+  assert.equal(runs[0].agentId, "def456")
+})

@@ -783,3 +783,16 @@ test("a targeting call that names no path at all still lands at '.'", () => {
   assert.equal(cols[2], "yes")
   assert.equal(cols[3], ".")
 })
+
+test("a repository path that does not exist exits 2 with a one-line error naming the path", () => {
+  const projectsDir = mkTmp("mine-projects-")
+  const missing = path.join(mkTmp("mine-missing-"), "does-not-exist")
+  assert.throws(
+    () => execFileSync(process.execPath, [script, missing, `--projects=${projectsDir}`], { encoding: "utf8", stdio: "pipe" }),
+    (err) => {
+      assert.equal(err.status, 2)
+      assert.match(err.stderr, new RegExp(missing.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")))
+      return true
+    },
+  )
+})

@@ -154,7 +154,11 @@ What a published item must hold:
   `${` `}` around it in a real path), which resolves in a plugin install and a skills-only one alike —
   never a path relative to wherever the user happens to be. Keep the plugin-root variable
   (`CLAUDE_PLUGIN_ROOT`) for files outside the skill's folder (a plugin's hooks), and say what a
-  skills-only install loses there. A Markdown link to a file inside the skill stays relative
+  skills-only install loses there. **Only `SKILL.md` is substituted**: a file under `references/` is
+  read as it is written, so a braced variable there reaches the shell as an empty string and the command
+  fails. A command in a reference names the skill's folder in words, and `SKILL.md`, where it sends the
+  reader to that reference, hands over the resolved folder.
+  A Markdown link to a file inside the skill stays relative
   (`references/x.md`): it works in Claude Code, on GitHub and in other harnesses, where the variable is
   never substituted.
 - **Explain those variables without their braces.** Claude Code substitutes the braced form everywhere

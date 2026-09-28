@@ -110,6 +110,15 @@ function classify(message) {
   return null
 }
 
+// A plugin agent is dispatched as `<plugin>:<name>` (e.g. `delegation:reviewer`), while the frontmatter
+// `name` a definition file states is unqualified. Match either form to the definition it names.
+function matchAgentName(subagentType, agents) {
+  if (!subagentType) return null
+  if (agents.has(subagentType)) return subagentType
+  for (const name of agents.keys()) if (subagentType.endsWith(`:${name}`)) return name
+  return null
+}
+
 const files = walk(projects).filter((f) => { try { return fs.statSync(f).mtimeMs >= since } catch { return false } })
 const subagentFile = new Map()
 const calls = new Map()
@@ -124,8 +133,10 @@ for (const f of files) {
     const content = r.message?.content
     if (!Array.isArray(content)) continue
     for (const b of content) {
-      if (b.type === "tool_use" && b.name === "Agent" && agents.has(b.input?.subagent_type) && !calls.has(b.id))
-        calls.set(b.id, { name: b.input.subagent_type, ts: r.timestamp || "", background: b.input.run_in_background !== false })
+      if (b.type === "tool_use" && b.name === "Agent" && !calls.has(b.id)) {
+        const matched = matchAgentName(b.input?.subagent_type, agents)
+        if (matched) calls.set(b.id, { name: matched, ts: r.timestamp || "", background: b.input.run_in_background !== false })
+      }
       if (b.type === "tool_result") {
         const m = text(b.content).match(/agentId:\s*([a-z0-9]+)/)
         if (m) agentIds.set(b.tool_use_id, m[1])

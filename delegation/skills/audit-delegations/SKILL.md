@@ -24,7 +24,7 @@ newer sessions; `audit` runs Steps 1–3 and writes nothing.
 **`review <definition>…` is a mode of its own**, for definitions that already exist: it measures their
 runs (turns, refusals by source, report length), compares sibling definitions of one role across
 repositories, and repairs both. Read `references/review-mode.md` and follow it instead of the steps
-below; it is target-state too.
+below; it is target-state too — its commands run from this skill's folder, `${CLAUDE_SKILL_DIR}`.
 
 The mining of Step 1 and the reading of Step 2 can go to the `delegation:miner` subagent, a plugin agent
 available wherever the plugin is installed, which returns the roles and their fixed half without filling
@@ -131,8 +131,11 @@ Two kinds of rule need a reading before they enter the fixed half:
 
 A definition shipped inside a plugin has its frontmatter `hooks` ignored by Claude Code, so for a plugin
 agent the guard goes in the plugin's own `hooks/hooks.json` instead, as a `PreToolUse` hook that acts only
-when the payload's `agent_type` names the agent — this plugin's own `hooks/hooks.json` and
-`scripts/guard.mjs` are a working example.
+when the payload's `agent_type` names the agent — this plugin's own `${CLAUDE_SKILL_DIR}/../../hooks/hooks.json` and
+`${CLAUDE_SKILL_DIR}/../../scripts/guard.mjs` are a working example, both outside this skill's own folder.
+A skills-only install (`npx skills add`) fetches this skill's folder only, not the plugin's `hooks/` and
+`scripts/`; copy both by hand from the catalog repository, `entelekheia-ai/public-plugin` on GitHub, folder
+`delegation/hooks/` and `delegation/scripts/`.
 
 A second reason favours a subagent even for a short fixed half: **an `effort` level reaches a subagent
 dispatched through the Agent tool only through its frontmatter.** When the routing table wants a level
@@ -140,7 +143,7 @@ other than the model's default, a definition is the only way to get it.
 
 Two shapes of role need a choice made here:
 
-- **Its model varied with the size of the task** (Sonnet on small tracks, Opus on large ones). Write one
+- **Its model varied with the size of the task** (Sonnet on small tasks, Opus on large ones). Write one
   definition on the cheaper model the routing table names, and let the caller pass `model` on the call
   for a large task — that per-call override is the escalation lever. Write two definitions only when the
   fixed halves differ too.
@@ -211,9 +214,9 @@ repository whose stop hook speaks returns the model's reply to that hook as `res
 also switches off the agent's own frontmatter hooks, so this run exercises the definition's prose; the
 hooks are tested on their own below, and a live check of them is a second run without the flag. Either
 way, read the report from its source: it is the subagent's last message, in `~/.claude/projects/<slug>/<session_id>/subagents/agent-*.jsonl`; the `.meta.json` beside it
-names the `agentType`. Confirm what ran, where the tools that answer it are installed: the
-`delegation:route-work` skill's `measure.js` reports, per kind of delegation, the model asked against the
-model that actually ran; for this one agent's turns and effort, this skill's own
+names the `agentType`. Confirm what ran, where the tools that answer it are installed:
+`/route-work measure` (the `delegation:route-work` skill's measure mode) reports, per kind of delegation,
+the model asked against the model that actually ran; for this one agent's turns, this skill's own
 `node ${CLAUDE_SKILL_DIR}/scripts/agent-runs.mjs <repo>/.claude/agents/<name>.md` reports turns against the
 definition's `maxTurns`, the report's length, and refusals by source. Without either installed, read the
 subagent's own transcript directly — its first assistant message and the record's `message.model` state
@@ -252,7 +255,7 @@ request.
 - [ ] Each definition has a `name` that says which repository it serves, when several repositories' agents load in one session, plus `model`, `effort`, a `tools` allowlist, `maxTurns`, and hooks for every deterministic rule
 - [ ] The repository's agent instructions file (`AGENTS.md`, `CLAUDE.md`) names the agents and says a caller omits `model`
 - [ ] The definitions load where sessions actually open
-- [ ] Each new subagent ran once on real work from a fresh session, and `route-work`'s `measure.js`, this skill's `agent-runs.mjs`, or the subagent's own transcript confirmed the model and effort that ran
+- [ ] Each new subagent ran once on real work from a fresh session, and `/route-work measure` or the subagent's own transcript confirmed the model and effort that ran
 - [ ] Each hook command blocked one input and passed another
 - [ ] Every shortfall the run reported is folded in or answered
 

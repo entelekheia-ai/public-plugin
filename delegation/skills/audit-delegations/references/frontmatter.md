@@ -47,11 +47,15 @@ one that must parse something **MUST** live in a tested script.
 
 **Let git run only its read-only subcommands** (`PreToolUse`, matcher `Bash`), and optionally keep
 `Write`/`Edit` inside a temporary directory (matcher `Edit|Write|NotebookEdit`, flag
-`--writes-under-tmp`): the script and its test ship in the `delegation` plugin as `scripts/git-read-only.mjs`
-and `scripts/git-read-only.test.mjs` — copy both into the repository at `scripts/agent-hooks/git-read-only.mjs`
-and `scripts/agent-hooks/git-read-only.test.mjs`, called through
-`$CLAUDE_PROJECT_DIR` with the agent's name, wrapped in the fallback shown below — never as a bare
-`node` line, which fails open when the script is absent.
+`--writes-under-tmp`): the script and its test ship in the `delegation` plugin. In a plugin install they
+sit in that plugin's own `scripts/` folder, reached as `../../scripts/` from this skill's folder (the
+one SKILL.md names); in a skills-only install
+(`npx skills add`), the plugin's `scripts/` and `hooks/` folders are not fetched, so copy both files by
+hand from the catalog repository, `entelekheia-ai/public-plugin` on GitHub, folder `delegation/scripts/`.
+Either way, copy both into the repository — `scripts/agent-hooks/git-read-only.mjs` and
+`scripts/agent-hooks/git-read-only.test.mjs` is one suggested location, not a prescription; wherever they
+land, call them through `$CLAUDE_PROJECT_DIR` with the agent's name, wrapped in the fallback shown below —
+never as a bare `node` line, which fails open when the script is absent.
 
 It parses the command — heredoc bodies removed, split on shell separators, `bash -c`, `xargs`, `sudo`,
 `env` and `find -exec` unwrapped — and allows a git subcommand only from a read-only list, so an alias or

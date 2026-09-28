@@ -9,10 +9,13 @@ The unit is the definition, and the evidence is its runs. A definition read on i
 what it forgot shows up only as a turn spent on a refusal, a report past its cap, or a rule restated in
 every brief.
 
+Every command below runs from this skill's folder — the one SKILL.md names by its skill-folder variable,
+which Claude Code substitutes only in SKILL.md itself, not in a reference file opened with Read.
+
 ## R1 — Measure the runs
 
 ```sh
-node ${CLAUDE_SKILL_DIR}/scripts/agent-runs.mjs --refusals [--days=30] \
+node <this skill's folder>/scripts/agent-runs.mjs --refusals [--days=30] \
   <implementer.md> --cap-lines=50 --expect='Rulings' \
   <reviewer.md> --cap-words=900 --expect='Declined to judge'
 ```
@@ -75,7 +78,7 @@ Edit each definition. For every hook you changed, extract it and feed one input 
 must pass, as in Step 6:
 
 ```sh
-node ${CLAUDE_SKILL_DIR}/scripts/extract-hooks.mjs <definition.md> <tmp-dir>
+node <this skill's folder>/scripts/extract-hooks.mjs <definition.md> <tmp-dir>
 printf '%s' '<hook input JSON>' | sh <tmp-dir>/<Event>-<n>.sh; echo "exit=$?"
 ```
 

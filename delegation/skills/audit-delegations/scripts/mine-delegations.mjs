@@ -47,6 +47,10 @@ if (!repoArg) {
   process.exit(2)
 }
 const repoDir = path.resolve(repoArg).replace(/\/+$/, "")
+if (!fs.existsSync(repoDir)) {
+  console.error(`mine-delegations.mjs: repository path does not exist: ${repoDir}`)
+  process.exit(2)
+}
 const repo = repoDir + "/"
 const repoName = path.basename(repoDir)
 const days = Number(opt("days", "0"))
