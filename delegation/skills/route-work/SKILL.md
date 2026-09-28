@@ -8,6 +8,10 @@ user_invocable: true
 
 # /route-work — place the work, pick the model, and tune the table to your own use
 
+**Before starting, read your notes for this skill**, where they exist — `~/.agents/skill-notes/route-work.md`,
+then `.agents/skill-notes/route-work.md`, then `.agents/skill-notes/route-work.local.md`. Where two disagree, the
+more specific one wins. They hold what earlier runs taught; see the last section for how they are written.
+
 Two decisions are made every time work is about to leave the main loop, in this order: **where it runs**,
 then **which model and effort run it**. A third decision comes before either and is easy to forget: **which
 model the session itself is on, and how to raise it** when the work gets harder. This skill makes all
@@ -253,13 +257,18 @@ saves, because a wrong cheap result is paid at every later step.
 - [ ] The brief carries the clauses in `references/brief-clauses.md` that fit it
 - [ ] A `BUILD` delegation has a real gate, and escalation follows Step 4
 
-## ⟳ After every use: review this skill
+## ⟳ After every use: note what this run taught
 
-**The table is a starting point, and the rows most likely to be wrong for you are the ones still at `basis:
-shipped default`** — nobody has weighed them against your own work yet. `record` every delegation you
-verify, surprising or not; when a shape recurs twice with no row, give it one through `update`. A row that
-reads better and measures the same has not been fixed.
+**Never edit this file** — it is an installed copy, and the next update overwrites it without a word.
+Write what the run taught to a notes file instead, one dated line per point, in the narrowest scope that
+fits:
 
-**Part 0b rests on how prompt caching works today.** If Claude Code starts keeping the cache across an
-effort change on more models, or across a model switch and back, the raise order changes — re-check the
-Prompt caching page of the Claude Code docs when a model or a Claude Code version changes.
+- **local** — `.agents/skill-notes/route-work.local.md`, kept out of git (add `*.local.md` to that folder's
+  ignore rules if it is not there yet). The default.
+- **repo** — `.agents/skill-notes/route-work.md`, committed, read by everyone who works in this repository.
+- **user** — `~/.agents/skill-notes/route-work.md`, true for you in every project.
+
+Then ask the user whether a note should go back into the skill itself, through the flow they use for it
+— an issue, a pull request, an edit in the plugin's own repository. When you do not know that flow, ask.
+
+What is worth noting, in this skill:

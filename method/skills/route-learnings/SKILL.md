@@ -8,6 +8,10 @@ user_invocable: true
 
 # /route-learnings — the ceremony for what a repository's own closure cannot route
 
+**Before starting, read your notes for this skill**, where they exist — `~/.agents/skill-notes/route-learnings.md`,
+then `.agents/skill-notes/route-learnings.md`, then `.agents/skill-notes/route-learnings.local.md`. Where two disagree, the
+more specific one wins. They hold what earlier runs taught; see the last section for how they are written.
+
 If your repository already has its own closure ceremony (a task or plan close), it routes what the work
 inside that repository taught. Work that spans repositories, or ends with no such ceremony to run, has no
 destination for what it learned. This skill is that destination.
@@ -445,22 +449,22 @@ it when this run is the consolidate mode, or when a demotion turns out to affect
 - [ ] The demotion question was asked out loud, even if the answer was "nothing"
 - [ ] Whatever index your setup keeps over this tier, if any, was regenerated and checked
 
-## ⟳ After every use: review this skill
+## ⟳ After every use: note what this run taught
 
-**The weakest part is Step 3, because questions are where this file hides its assumptions.** The edit
-worth making is the candidate the three questions handled badly — one that passed all three and still
-should not have been written, or that failed the first as "a one-off" and then recurred later. Sharpen the
-question that let it through.
+**Never edit this file** — it is an installed copy, and the next update overwrites it without a word.
+Write what the run taught to a notes file instead, one dated line per point, in the narrowest scope that
+fits:
 
-Three failure modes to watch for, because all three look like the skill working:
+- **local** — `.agents/skill-notes/route-learnings.local.md`, kept out of git (add `*.local.md` to that folder's
+  ignore rules if it is not there yet). The default.
+- **repo** — `.agents/skill-notes/route-learnings.md`, committed, read by everyone who works in this repository.
+- **user** — `~/.agents/skill-notes/route-learnings.md`, true for you in every project.
 
-- **A run that fits none of the three triggers.** That table claims those are all of them; an invocation
-  outside it is the edit.
-- **A fact that had to be argued into a destination.** Step 4 places by what the fact *is*, and a fact that
-  took paragraphs to place is evidence a destination is missing — never evidence you reasoned well.
-- **A destination whose admission field was filled to make the entry filable.** `scope:`, `path:` and the
-  moment are tests before they are metadata, and an invented answer passes every gate there is.
+Then ask the user whether a note should go back into the skill itself, through the flow they use for it
+— an issue, a pull request, an edit in the plugin's own repository. When you do not know that flow, ask.
 
-**A prescription for this file is applied to this file.** Filing it elsewhere to be applied later is what
-produces a backlog of refinements indistinguishable from ones already landed. If a run produced no edits,
-say so — a filter that fit its candidates exactly is signal too.
+What is worth noting, in this skill:
+
+**A prescription for this skill goes to its notes file the same day.** Leaving it to be written down
+later is what produces a backlog of refinements indistinguishable from ones already landed. If a run
+produced no note, say so — a filter that fit its candidates exactly is signal too.

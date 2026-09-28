@@ -8,6 +8,10 @@ user_invocable: true
 
 # Publish your own skills and agents, without shipping what only you have
 
+**Before starting, read your notes for this skill**, where they exist — `~/.agents/skill-notes/publish.md`,
+then `.agents/skill-notes/publish.md`, then `.agents/skill-notes/publish.local.md`. Where two disagree, the
+more specific one wins. They hold what earlier runs taught; see the last section for how they are written.
+
 A skill written for your own setup leans on things a stranger will not have: paths on your machine, names
 of your private repositories, a script only you wrote, a measurement only your sessions produced. Removing
 them by hand is easy to do and easy to do wrong — the dangerous losses are not the private names you strip
@@ -143,6 +147,10 @@ What a published item must hold:
   in a skill's text when it loads it, so a sentence *about* the variable reaches the model as a machine
   path — and prints the user's own path wherever the text is echoed.
 - **No note addressed to its author.** Review comments pasted into the text read to a model as orders.
+- **It learns without being edited.** An installed copy is overwritten on update, so a published skill
+  never asks the model to edit itself: it reads notes files at the start (user, then repo, then local, under
+  `.agents/skill-notes/`) and writes what a run taught to the local one at the end, then asks whether a
+  note should go back to the skill through the user's own flow.
 
 For a plugin that other harnesses should install too, add the manifest they read beside the Claude one
 (for Codex, `.codex-plugin/plugin.json` listing the plugin's skills).
@@ -191,9 +199,18 @@ For a plugin that other harnesses should install too, add the manifest they read
 - [ ] The release was committed before it was tagged
 - [ ] Nothing was pushed
 
-## ⟳ After every use: review this skill
+## ⟳ After every use: note what this run taught
 
-The step most likely to fail silently is Step 3's file list: an item that lost a file passes every gate.
-If a blind review finds a missing script or state field, check first whether the audit's brief listed it.
-The second is Step 2's delta test — an item that keeps overlapping a public skill after publication means
-the delta sentence was a paragraph, not the core.
+**Never edit this file** — it is an installed copy, and the next update overwrites it without a word.
+Write what the run taught to a notes file instead, one dated line per point, in the narrowest scope that
+fits:
+
+- **local** — `.agents/skill-notes/publish.local.md`, kept out of git (add `*.local.md` to that folder's
+  ignore rules if it is not there yet). The default.
+- **repo** — `.agents/skill-notes/publish.md`, committed, read by everyone who works in this repository.
+- **user** — `~/.agents/skill-notes/publish.md`, true for you in every project.
+
+Then ask the user whether a note should go back into the skill itself, through the flow they use for it
+— an issue, a pull request, an edit in the plugin's own repository. When you do not know that flow, ask.
+
+What is worth noting, in this skill:

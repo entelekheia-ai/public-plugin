@@ -9,6 +9,10 @@ user_invocable: true
 
 # Carry a plan through its tracks, unattended between them
 
+**Before starting, read your notes for this skill**, where they exist — `~/.agents/skill-notes/run-plan.md`,
+then `.agents/skill-notes/run-plan.md`, then `.agents/skill-notes/run-plan.local.md`. Where two disagree, the
+more specific one wins. They hold what earlier runs taught; see the last section for how they are written.
+
 Fires when a plan has **several remaining tracks** and the run should proceed **unattended between
 them** — the only input the maintainer would otherwise give is "go on" — with the run **paced** against
 the usage limit and context window, and its questions **batched** rather than asked one per track. The
@@ -335,18 +339,18 @@ without it, it reports `unknown` rather than failing.
 - [ ] The report was written to a named file before the final message, and lists every ruling and
       deferred minor
 
-## ⟳ After every use: review this skill
+## ⟳ After every use: note what this run taught
 
-The outcome table is the step whose failure is silent in both directions. Still asking "go on" between
-tracks means a row there parks or halts what should have been a ruling; reverting a ruled decision means a
-ruling that should have parked. Rewrite the table, not the run.
+**Never edit this file** — it is an installed copy, and the next update overwrites it without a word.
+Write what the run taught to a notes file instead, one dated line per point, in the narrowest scope that
+fits:
 
-The dependency column decides how much work continues past a parked track, and it is written by judgement.
-A track that ran on an output a parked track was about to change is the sign the column was read too
-narrowly.
+- **local** — `.agents/skill-notes/run-plan.local.md`, kept out of git (add `*.local.md` to that folder's
+  ignore rules if it is not there yet). The default.
+- **repo** — `.agents/skill-notes/run-plan.md`, committed, read by everyone who works in this repository.
+- **user** — `~/.agents/skill-notes/run-plan.md`, true for you in every project.
 
-Measured once: a headless run over a four-track plan showed `budget.sh` answering `unknown` throughout,
-because neither the statusline session file, the rate-limit file, nor a readable transcript existed for
-that session — expected outside an interactive session with a statusline script configured, and (for
-context) before this session's own transcript file has anything in it. The first interactive run in a
-given surface is the one to check for whether the pacing signal is actually reaching this skill.
+Then ask the user whether a note should go back into the skill itself, through the flow they use for it
+— an issue, a pull request, an edit in the plugin's own repository. When you do not know that flow, ask.
+
+What is worth noting, in this skill:
