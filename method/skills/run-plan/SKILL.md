@@ -149,7 +149,8 @@ $S init <plan> <repo> <worktree> <branch> <base>      # learnings_routed starts 
 $S track "Track 2" by=implementer depends="Track 1"    # adds the row as runnable
 $S track "Track 2" status=waiting                      # its dependency isn't done yet
 $S track "Track 2" status=running task=<dossier path>
-$S track "Track 2" status=done commit=<sha>            # commit= appends; repeat it per commit
+$S track "Track 2" status=done commit=<sha>            # commit= appends; repeat it, in one call or several
+$S track "Track 1" status=done commit=<sha>            # right after init, for each track that landed before it
 $S question "does X take Y?" track="Track 3" options="yes|no" recommend="no"
 $S answer 0 "no"                                       # sets questions[0].answer once the maintainer answers it
 $S routed true                                         # after learnings are written down, and only then

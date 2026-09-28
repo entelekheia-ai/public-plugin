@@ -66,7 +66,7 @@ case "$cmd" in
         by=*) by=${kv#by=} ;;
         depends=*) depends=${kv#depends=}; has_depends=1 ;;
         task=*) task=${kv#task=} ;;
-        commit=*) commit=${kv#commit=} ;;
+        commit=*) commit="$commit ${kv#commit=}" ;;
         *) echo "state.sh: unknown field '$kv'" >&2; exit 1 ;;
       esac
     done
@@ -78,7 +78,7 @@ case "$cmd" in
           | (if $by != "" then .by = $by else . end)
           | (if $hasdep == "1" then .depends_on = ($depends | split(",") | map(select(. != ""))) else . end)
           | (if $task != "" then .task = $task else . end)
-          | (if $commit != "" and (.commits | index($commit) | not) then .commits += [$commit] else . end)
+          | reduce ($commit | split(" ") | map(select(. != "")))[] as $c (.; if any(.commits[]; . == $c) then . else .commits += [$c] end)
         end)' \
       --arg name "$name" --arg status "$status" --arg by "$by" --arg depends "$depends" \
       --arg hasdep "$has_depends" --arg task "$task" --arg commit "$commit"
