@@ -42,7 +42,7 @@ The three are not the same job, and "done" means something different in each.
 |---|---|---|
 | **A record closed** | a task dossier closed in a repository, a plan shipped, or cross-repo work ended with no repository to close in | Route what it taught. Steps 1–5. Demotion asked out loud. |
 | **Context is about to be lost** — the session is about to be compacted mid-flight, or `/route-learnings compact` | Nothing ended; the session is being truncated | The pre-compaction section below, **then** Steps 1–5. |
-| **The tier is over budget** | your own index says so, or enough has accumulated to review | [`references/consolidating-the-base.md`](references/consolidating-the-base.md), with convergence as the point. |
+| **The tier is over budget** | your own index says so, or enough has accumulated to review | [`references/consolidating-the-base.md`](references/consolidating-the-base.md), with convergence as the point — no harvest, no discharge; the demotion question still asked. |
 
 **Two can fire at once, and the run then owes both.** A closure ceremony can run in one repository while
 the maintainer also asks, in the same breath, for the session to be compacted next. Read as a

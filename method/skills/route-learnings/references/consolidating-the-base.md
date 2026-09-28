@@ -10,6 +10,11 @@ Pick a budget that fits your own base and keep it in one place your index reads 
 sentence — a number chosen once tends to need raising later, as a base earns more entries that all pass
 the promotion test and a permanently-lit alarm stops being an alarm.
 
+**The pass has converged when the tier is at or under its budget** — landing exactly on it counts, and no
+headroom is owed. Stop earlier, and say where and why, when every further reduction would need an edit
+outside what this run may touch (a permanent document's link, another record's decision). This mode is
+convergence only: it owes no harvest and no discharge, and it still asks the demotion question.
+
 ## Contents
 
 - [The seven outcomes](#the-seven-outcomes) — what a pass does to one entry
@@ -18,12 +23,18 @@ the promotion test and a permanently-lit alarm stops being an alarm.
 
 ## The seven outcomes
 
-Each entry gets exactly one. Six of them shrink the base; only **rewritten** leaves it the same size.
+Each entry the pass decides on gets exactly one. Six of them shrink the base; only **rewritten** leaves it
+the same size. An entry reviewed and found still true and still needed is **kept** — the common case,
+reported as a count rather than one line each. An entry that qualifies for an outcome but whose removal is
+blocked (an inbound link from a permanent document, a recorded decision that it stays) is **kept, blocked**,
+reported with what blocks it; see the end of "Moving a batch of entries into a skill".
 
 ### Expired — the tool moved
 
 A tool-fact entry whose version has moved: re-verify, or delete it. An unverifiable claim about an old
-version is worse than no entry.
+version is worse than no entry. **Before deleting, ask the moment question of any prescription it
+carries** — advice like "establish X before reverting" can outlive the tool fact that prompted it; route
+that part to the skill whose moment it fits, then delete the rest.
 
 **"The version moved" is not one thing**, and applying it flat either deletes working facts or demands
 re-verifications that find nothing. Weigh what would invalidate *that* claim: a claim about a documented
@@ -125,6 +136,11 @@ Doing this by feel loses facts quietly. Four steps, in this order:
    absorbed than had.
 4. **Require the removal list, quoted, and read that instead of the rewritten text.** One line per removed
    sentence with where it now lives. It is shorter than the diff and it is where a silent loss shows.
+5. **Two sentences the judge flags have no skill to go to.** One whose claim cannot be verified now is not
+   written into a skill (a skill's claims must hold); it is dropped **and listed in the report as dropped,
+   unverifiable**, so the loss is visible. One that is general method rather than any skill's domain
+   ("read the resolver before writing a default into a record") goes to a skill about working methods if
+   the setup has one, otherwise to the user's own notes — and is reported either way.
 
 **Expect an entry to survive the skill that took a bite of it.** Measured once, over a batch of entries
 routed into two skills: none were fully absorbed on the first pass, and what each kept was of one of two
@@ -139,6 +155,16 @@ that turned out to be the opposite of what the source entry, and the tool's own 
 checker, or your own gate, and is found for you. A bare slug in prose dangles in silence and is found only
 by `grep`. A quoted slug inside a historical account is neither — it is evidence that the string was
 written, and it stays.
+
+**A link from a permanent document is a defect to repair, not a reason to keep the entry** — the main
+skill already forbids a permanent document from linking into this tier. Where you may edit that document,
+point the link at the entry's new home (the skill that absorbed it), or inline the two sentences the
+document needed; then delete. Where you may not, the entry is **kept, blocked**, and the report names the
+document and line so whoever owns it can make the edit.
+
+**A decision already written down wins over this pass.** When a plan or ADR records that an entry stays,
+the entry stays until a new decision in that same record says otherwise. Propose that decision in the
+report; do not delete over it.
 
 ## What the pass owes when it ends
 
