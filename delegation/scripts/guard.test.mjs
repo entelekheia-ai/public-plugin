@@ -34,6 +34,8 @@ const cases = [
   ["plan-scout may not write into a checkout", write("/work/repo/a.md", "delegation:plan-scout"), 2],
   ["blind-run may write where its brief says", write("/work/repo/a.md", "delegation:blind-run"), 0],
   ["blind-run may not push", bash("git push", "delegation:blind-run"), 2],
+  ["implementer may not commit", bash("git commit -m x", "delegation:implementer"), 2],
+  ["implementer may write into a checkout", write("/work/repo/a.md", "delegation:implementer"), 0],
 ]
 
 for (const [name, payload, expected] of cases) {

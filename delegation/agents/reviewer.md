@@ -7,6 +7,8 @@ color: red
 tools: Read, Grep, Glob, Bash, Write, LSP, Skill
 omitClaudeMd: true
 maxTurns: 80
+skills:
+  - delegation:work-a-dossier
 # The read-only guard (git read-only subcommands only; Write/Edit only under a temporary directory) is
 # this plugin's hooks/hooks.json: Claude Code ignores a plugin agent's own `hooks:` field.
 ---
