@@ -76,6 +76,10 @@ fi
 
 if [ -z "$ctx" ]; then
   echo "unknown context unreadable for session ${sid:-<unset>}; $limit_note"
+elif [ "$ctx" -gt 100 ]; then
+  # More tokens than the window holds: the window is wrong, not the session. A 1M-context model read
+  # against the 200000 default shows here as a few hundred percent.
+  echo "unknown context reads ${ctx}% of RUN_PLAN_CONTEXT_WINDOW=$CONTEXT_WINDOW — set it to your model's real window; $limit_note"
 elif [ "$ctx" -ge "$CTX_ROUTE" ]; then
   echo "record-learnings"
   echo "context at ${ctx}% (threshold ${CTX_ROUTE}%, $ctx_src); $limit_note"
