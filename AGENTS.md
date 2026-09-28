@@ -17,6 +17,12 @@ The `entelekheia` Claude Code marketplace: small plugins, one folder each, insta
   mentions is optional to it, never required.
 - **The plugin name is the prefix.** An agent in `delegation/agents/reviewer.md` is `delegation:reviewer`;
   never repeat the group in the file name.
+- **The author's public products may be named as a reference, never as a requirement.** A skill may point
+  at one as an example or an option — `vibe-ops` as a plugin example beside others, or as a manager built on
+  deterministic gates; `ref-id` as the option when something needs one stable identifier for anything — and
+  should, where it fits. It never makes one an instruction the skill depends on. A product whose repository
+  is private, or that has nothing to do with the skill's subject, is not named at all: say the category
+  instead ("an observability tool", "a graph viewer").
 - **`ref:` identifiers appear only in READMEs and in scripts that locate packages, versions or excerpts** —
   never inside a SKILL.md or an agent definition, where a model would read them as something to produce.
 - Before a commit: `vibe-ops check` from the repo root (`vibe-ops` must be on PATH). It composes this

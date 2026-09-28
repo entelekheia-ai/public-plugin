@@ -8,11 +8,16 @@ JQ=$(command -v jq || true)
 sid=$("$JQ" -r '.session_id // empty' 2>/dev/null)
 state="$HOME/.claude/plan-runs/$sid.json"
 [ -n "$sid" ] && [ -f "$state" ] || exit 0
+unanswered=$("$JQ" -r '[.questions[]? | select(.answer == null or .answer == "")] | .[] | "- " + .text' "$state")
 cat <<EOF
 A plan run (the run-plan skill) is in progress (state file: $state). Preserve verbatim in the summary:
 the plan path, the repository and worktree, each finished track with its commit, the track in
-progress and how far it got, each parked track with its question, the path of every open task
-note or dossier, and — one line each — anything learned since the last time it was written down that
-has not been written down yet.
+progress and how far it got, each parked track with its question, the path of every open task note
+or dossier, and — one line each — anything learned since the last time it was written down that has
+not been written down yet.
 EOF
+if [ -n "$unanswered" ]; then
+  echo "Unanswered questions in the state file's questions[]:"
+  printf '%s\n' "$unanswered"
+fi
 exit 0
