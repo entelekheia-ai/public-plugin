@@ -279,7 +279,7 @@ for (const dir of fs.readdirSync(projects)) {
           if (input.prompt.includes(repoDir)) touched = true
           found.push({
             session: file.slice(0, 8),
-            date: rec.timestamp?.slice(0, 10) ?? "",
+            date: rec.timestamp ? rec.timestamp.slice(0, 16).replace("T", " ") : "",
             type: input.subagent_type ?? "general-purpose",
             model: input.model ? alias(input.model) : "(definition or inherited)",
             description: input.description ?? "",
@@ -406,12 +406,12 @@ if (promptIndexes.length) {
     console.log(`\n===== #${c.index} ${c.date} ${c.session} [${c.type} / ${c.model}] ${c.description}\n${c.prompt}`)
   }
 } else if (args.includes("--calls")) {
-  console.log("index  cluster  target  lands            date        session   type / model                          chars  description")
+  console.log("index  cluster  target  lands            date              session   type / model                          chars  description")
   for (const c of calls) {
     const kind = `${c.type} / ${c.model}`.slice(0, 36).padEnd(36)
     console.log(
       `#${String(c.index).padEnd(5)} ${String(c.cluster ?? "-").padEnd(8)} ${(c.targets ? "yes" : "no").padEnd(7)} ` +
-        `${c.lands.padEnd(16)} ${c.date}  ${c.session}  ${kind}  ${String(c.prompt.length).padStart(5)}  ${c.description}`,
+        `${c.lands.padEnd(16)} ${c.date.padEnd(16)}  ${c.session}  ${kind}  ${String(c.prompt.length).padStart(5)}  ${c.description}`,
     )
   }
 } else {

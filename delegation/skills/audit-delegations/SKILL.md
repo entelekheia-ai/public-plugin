@@ -80,20 +80,23 @@ Read the output with three limits in mind:
   targeting call before it counts toward a role, and drop in Step 2 any call whose work is aimed at
   another repository.
 
-A family seen in one session only is a task that fanned out, not a recurrence. Nothing below applies to it.
-
-**The unit of evidence is the piece of work, not the session id.** One long session can carry several
-separate tasks — a plan run across its tracks, resumed across a compaction — and a role it dispatched for
-each of them has recurred, even though every call shares one session id. When the window holds few, long
-sessions, count the distinct tasks a role's calls served, read from their variable half, in place of
-sessions, and say in the report that you did. One task fanned out into batches still counts once.
+**The unit of evidence is the distinct task, not the session id.** A task is a separate piece of work: a
+session, or one of several tasks carried inside one long session — a plan run across its tracks, resumed
+across a compaction. A role dispatched for each of several tasks inside one session has recurred, even
+though every call shares one session id; one task fanned out into batches still counts once. A family
+whose calls all serve one task is a task that fanned out, not a recurrence, and nothing below applies to
+it. Tell a fan-out from separate tasks this way: calls dispatched together from one brief, naming the same
+task, spec or range, are one task; calls naming different tasks or ranges, with other work dispatched
+between them, are separate — read from the time column of `--calls`, which prints each call to the minute, and the prompts. When
+the window holds few, long sessions, count the distinct tasks a role's calls served, read from their
+variable half, in place of sessions, and say in the report that you did.
 
 **No family at all is a result, not a failure of the run.** When no fixed sentence is shared across
 sessions, lowering `--threshold` finds nothing more, because the shared sentences are what is missing: the
 briefs in this repository are written from scratch each time. Group the one-off calls by what the agent
-is asked to do, from their descriptions, and open the prompts only of a group that spans two sessions, or two distinct tasks of one long session. An
-audit that finds no recurring role ends there, with a Step 3 table whose surfaces are all **nothing** and
-the not-yet-reused list — that is the audit done.
+is asked to do, from their descriptions, and open the prompts only of a group that spans two distinct
+tasks. An audit that finds no recurring role ends there, with a Step 3 table whose surfaces are all
+**nothing** and the not-yet-reused list — that is the audit done.
 
 ## Step 2 — Split each family into roles and write down its fixed half
 
@@ -111,8 +114,8 @@ For each role, write down two lists:
 - **The variable half**: what changes per call — the task, the worktree, the items owned, what siblings
   are touching.
 
-Count the sessions each role appears in, across families and one-off calls — the family's own count is
-not the role's. That count, not the call count, is the evidence. A role found in one session only — a
+Count the distinct tasks each role appears in, across families and one-off calls — the family's own count
+is not the role's. That count, not the call count, is the evidence. A role found in one task only — a
 well-specified brief fanned out into batches — gets no surface yet, but list it as **not yet reused**
 rather than dropping it: the next audit is where it either recurs or leaves the list.
 
@@ -128,13 +131,13 @@ Two kinds of rule need a reading before they enter the fixed half:
 
 | The role… | Surface |
 |---|---|
-| recurs in 2+ sessions, and its fixed half is instructions to the doer | **subagent** in `<repo>/.claude/agents/` |
-| recurs in 2+ sessions but works across repositories — a blind first run of a new skill, a web research brief | **subagent** as a user-level `~/.claude/agents/` definition (or in the `.claude/agents/` of the folder where such sessions open) |
+| is already dispatched through a definition | **`review <definition>`** — repair it against these runs; every rule the briefs still restate is one the definition lacks |
+| recurs in 2+ tasks, and its fixed half is instructions to the doer | **subagent** in `<repo>/.claude/agents/` |
+| recurs in 2+ tasks but works across repositories — a blind first run of a new skill, a web research brief | **subagent** as a user-level `~/.claude/agents/` definition (or in the `.claude/agents/` of the folder where such sessions open) |
 | has a fixed rule a program can check — a path never written, a verb never run, a tree left clean, a setup step | **hook** in that subagent's frontmatter, with the prose kept beside it |
 | is the caller's own sequence between delegations — prepare, dispatch, verify, commit, review, triage | not an agent: that is the `delegation:hand-off` skill's procedure |
 | has, as its only fixed rule, one a built-in agent type already enforces — read-only search, which `Explore` is by its tool set | **nothing** — dispatch the built-in type; a definition would restate what its tools already guarantee |
-| is already dispatched through a definition | **`review <definition>`** — repair it against these runs; every rule the briefs still restate is one the definition lacks |
-| appeared in one session, or its fixed half is two sentences | **nothing** — a subagent that fires once is a file nobody maintains |
+| served one task, or its fixed half is two sentences | **nothing** — a subagent that fires once is a file nobody maintains |
 
 A definition shipped inside a plugin has its frontmatter `hooks` ignored by Claude Code, so for a plugin
 agent the guard goes in the plugin's own `hooks/hooks.json` instead, as a `PreToolUse` hook that acts only
@@ -257,8 +260,8 @@ request.
 ## Checklist
 
 - [ ] The miner ran over the sessions that wrote the repository, and each family was read, not only counted
-- [ ] Each role has its fixed half and variable half written down, with its session count
-- [ ] Each role has a surface; a one-session role got nothing
+- [ ] Each role has its fixed half and variable half written down, with its task count
+- [ ] Each role has a surface; a one-task role got nothing
 - [ ] Each definition has a `name` that says which repository it serves, when several repositories' agents load in one session, plus `model`, `effort`, a `tools` allowlist, `maxTurns`, and hooks for every deterministic rule
 - [ ] The repository's agent instructions file (`AGENTS.md`, `CLAUDE.md`) names the agents and says a caller omits `model`
 - [ ] The definitions load where sessions actually open
@@ -286,7 +289,7 @@ What is worth noting, in this skill:
 - The weakest step is 2: a role drawn too wide gives one agent two jobs, and one drawn too narrow gives
   two agents one job. Check the first dispatches after a definition lands — a caller still restating a
   rule the definition carries means the fixed half was read wrong.
-- The thresholds of Step 1 (`--threshold=0.25`, `--generic=0.3`) and the "two sessions" evidence bar rest
+- The thresholds of Step 1 (`--threshold=0.25`, `--generic=0.3`) and the "two tasks" evidence bar rest
   on the repositories that produced families; one whose briefs share no sentence produces none at any
   threshold, which tests nothing about them. Note it when the next audit of a repository that does form
   families tests them.

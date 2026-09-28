@@ -784,6 +784,36 @@ test("a targeting call that names no path at all still lands at '.'", () => {
   assert.equal(cols[3], ".")
 })
 
+test("--calls prints the date and time to the minute, not only the day", () => {
+  const repoDir = buildRepoTree()
+  const projectsDir = mkTmp("mine-projects-")
+  writeSession(projectsDir, "sess0019", [
+    toolUse("t1", "Edit", { file_path: path.join(repoDir, "README.md") }),
+    {
+      timestamp: "2026-09-20T14:37:00Z",
+      message: {
+        content: [
+          {
+            type: "tool_use",
+            id: "t2",
+            name: "Agent",
+            input: {
+              prompt: `Work only in ${repoDir}/ and fix the timestamp test.`,
+              subagent_type: "general-purpose",
+              description: "check timestamp",
+            },
+          },
+        ],
+      },
+    },
+  ])
+
+  const calls = run(repoDir, projectsDir, ["--calls"])
+  const line = calls.split("\n").find((l) => l.includes("check timestamp"))
+  assert.ok(line)
+  assert.match(line, /2026-09-20 14:37/, "the date column should carry the time to the minute, not only the day")
+})
+
 test("a repository path that does not exist exits 2 with a one-line error naming the path", () => {
   const projectsDir = mkTmp("mine-projects-")
   const missing = path.join(mkTmp("mine-missing-"), "does-not-exist")

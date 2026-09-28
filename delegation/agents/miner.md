@@ -55,9 +55,11 @@ node <miner script> <repo-path> [--days=N] --calls
 Ignore a family whose calls all come from one task fanned out into batches — that is not a recurrence. One
 long session can still carry several separate tasks (a plan run across its tracks, resumed after a
 compaction): when the window holds few, long sessions, count the distinct tasks a role served, read from
-the calls' variable half, in place of sessions, and say so. With zero clusters, build roles from `--calls`
-and the prompts you open: the recurring unit is then the agent's boundaries and report contract, not a
-shared sentence.
+the calls' variable half, in place of sessions, and say so. Tell a fan-out from separate tasks this way:
+calls dispatched together from one brief, naming the same task, spec or range, are one task; calls naming
+different tasks or ranges, with other work dispatched between them, are separate — read from the time
+column of `--calls` and the prompts. With zero clusters, build roles from `--calls` and the prompts you
+open: the recurring unit is then the agent's boundaries and report contract, not a shared sentence.
 
 ## Step 2 — Read each family and split it into roles
 
@@ -72,8 +74,9 @@ A **role** is a set of calls that give the same kind of agent the same boundarie
 kind of report. Calls that differ only in which file, language or item they name are one role. Add the
 one-off calls that match a role, and drop any call whose work is aimed at another repository. A role
 whose agent was renamed inside the window (moved into a plugin, a prefix changed) is one role. Count each
-role's sessions across families and one-offs. Quote nothing you did not read; where a large family made
-you sample, say how many prompts you read out of how many.
+role's distinct tasks (sessions, or tasks within one long session) across families and one-offs. Quote
+nothing you did not read; where a large family made you sample, say how many prompts you read out of how
+many.
 
 For each role, collect:
 
@@ -93,8 +96,9 @@ For each role, collect:
 In at most 80 lines, in the past tense:
 
 1. One line: sessions read, calls found, families of 2+ calls across 2+ sessions.
-2. Per role: its name as a verb phrase, the sessions and calls (dates and short session ids), the fixed
-   half with counts, the variable half, the deterministic rules.
+2. Per role: its name as a verb phrase, the distinct tasks (sessions, or tasks within a long session) and
+   calls (dates and short session ids), the fixed half with counts, the variable half, the deterministic
+   rules.
 3. **Not yet reused**: roles that served one task only, well specified but without a second one. List
    them rather than dropping them; say for each whether it already runs through an agent definition.
 4. The families you set aside, one line each, with why (one call, no shared rules, another repository).

@@ -128,7 +128,10 @@ Apply the audit's verdicts, split by what each edit needs:
   list, and every entry reported as not applied gets looked at.
 - **Rewrites** — a paragraph to generalize, a description to redraft: do them yourself, or give them to a
   capable implementer with the audit and your triage. A small model rewriting prose is where the
-  generalization goes wrong quietly; read any prose it produced in full.
+  generalization goes wrong quietly; read any prose it produced in full. A rewrite that **replaces** a rule
+  — what counts as evidence, which case goes where — is not done when the new sentence is in: search the
+  item for every line that states or applies the old rule, its table rows and checklist included, and
+  reword each, or the text gives two answers and the reader takes the first.
 - **Wiring the plugin into the catalog** — manifests, a workspace entry, the marketplace entry, a
   changeset: deterministic, so a script or your own hands, not an agent.
 
