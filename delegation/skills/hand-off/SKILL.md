@@ -39,7 +39,7 @@ whole loop end to end, with four things none of them assume on their own:
   commits before the reviewer ever runs. This is a deliberate deviation from superpowers' implementer
   template, which commits its own work: here, one agent committing would risk carrying along a sibling's
   unfinished edit.
-- **Several implementers, one worktree, disjoint files, in parallel.** A plan or dossier that fans out
+- **Several implementers, one worktree, disjoint files, in parallel.** A plan or task file that fans out
   into several independent items dispatches one implementer per item into the same worktree, each
   restricted to the files it owns — a second deliberate deviation, this time from
   `subagent-driven-development`'s "never dispatch multiple implementation subagents in parallel": that
@@ -89,12 +89,13 @@ Any implementer subagent works; `delegation:implementer` is this catalog's own, 
 to dispatch where you have it. Without a subagent tool, do the phase yourself, in the main loop. Where the
 repository has an implementer definition, the brief is its variable half: which variant
 (language), the worktree path, the items owned, the decisions taken, what siblings are touching. The
-definition carries the rest. The brief names a dossier — a task note beside the plan, or, in a repository
-under `project/tasks/NNN-slug.md`, that file — holding the decisions and the files each item owns, so a
-compacted context loses nothing the dispatch depended on. If you have the `vibe-ops:new` skill, `/vibe-ops:new
-task` is an optional richer backend for that dossier; a plain file the caller writes works the same way.
-When siblings run from the same dossier, the brief says so: each reports its rulings and questions, and
-only you write them into the dossier. **Omit `model` on the call** — a per-call model overrides
+definition carries the rest. The brief names a task file — a task note beside the plan, or, in a
+repository that numbers them, that file under `tasks/` — holding the decisions and the files each item
+owns, so a compacted context loses nothing the dispatch depended on. A tool such as `vibe-ops:new`'s
+`/vibe-ops:new task` is one optional richer backend for that task file, among others that number task
+files; a plain file the caller writes works the same way. When siblings run from the same task file, the
+brief says so: each reports its rulings and questions, and only you write them into the task file. **Omit
+`model` on the call** — a per-call model overrides
 the definition — except for two reasons: to escalate after a gate failure, or because a row of your
 routing table starts this kind of work on a stronger model already (a cross-cutting change routed straight
 to `opus`, say). Two implementers run in parallel only when their write sets are disjoint; the same file
@@ -115,7 +116,7 @@ When the implementer returns:
    other than the definition's means a `model` was passed on the call. An IDE panel can show a different
    label; the transcript is what ran.
 4. Rule on each `Ruling:` line of the report: accept it, or reverse it in the next brief. Copy the
-   accepted ones, and the questions, into the dossier when siblings shared it; questions for the
+   accepted ones, and the questions, into the task file when siblings shared it; questions for the
    maintainer go into the plan's open questions, asked in one batch.
 5. Judge the delegation once these four are settled: record the verified result with `/route-work record
    <what happened>` (`/delegation:route-work record <what happened>` in a full plugin install) — one row

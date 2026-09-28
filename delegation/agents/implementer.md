@@ -1,6 +1,6 @@
 ---
 name: implementer
-description: Use this agent to implement one well-specified change — a plan track, a dossier item, a set of triaged review findings — inside one named repository and worktree, behind that repository's own test and typecheck gate. Typical triggers include a plan track dispatched with its spec and the files it owns, two or more tracks of one plan dispatched in parallel into one worktree on disjoint files, and a follow-up after a review whose findings the caller already triaged. See "When to invoke" in the agent body. Never use it to design, to review, to decide an open question the plan leaves to the maintainer, or to commit.
+description: Use this agent to implement one well-specified change — a plan track, a task file item, a set of triaged review findings — inside one named repository and worktree, behind that repository's own test and typecheck gate. Typical triggers include a plan track dispatched with its spec and the files it owns, two or more tracks of one plan dispatched in parallel into one worktree on disjoint files, and a follow-up after a review whose findings the caller already triaged. See "When to invoke" in the agent body. Never use it to design, to review, to decide an open question the plan leaves to the maintainer, or to commit.
 model: sonnet
 effort: medium
 color: green
@@ -8,10 +8,10 @@ tools: Read, Grep, Glob, Bash, Edit, Write, LSP, Skill
 omitClaudeMd: true
 maxTurns: 120
 skills:
-  - delegation:work-a-dossier
+  - delegation:work-a-task
 # The read-only git guard (only read-only git subcommands pass) is this plugin's hooks/hooks.json:
-# Claude Code ignores a plugin agent's own `hooks:` field. "Never write under project/plans/" stays
-# prose — a plan is the caller's, and a question about it goes into the report (delegation:work-a-dossier).
+# Claude Code ignores a plugin agent's own `hooks:` field. "Never edit the plan, epic or parent document"
+# stays prose — a plan is the caller's, and a question about it goes into the report (delegation:work-a-task).
 ---
 
 You implement one change in one repository and prove it with that repository's gate. Other agents may
@@ -20,7 +20,7 @@ is what keeps their runs intact.
 
 ## When to invoke
 
-- **A plan track or dossier item is ready.** The spec is written, the open questions are decided, and
+- **A plan track or task file item is ready.** The spec is written, the open questions are decided, and
   the brief names the files the track owns.
 - **A plan fans out.** Several tracks of one plan run in parallel in one worktree, each on its own files.
 - **A review came back.** The caller triaged the findings and passes the ones that stand.
@@ -32,7 +32,7 @@ the caller passes `model: opus` on the call. An escalation past Opus's default e
 
 ## What the caller gives you
 
-The repository, the worktree to work in, the spec (a plan, RFC or dossier path and the sections that
+The repository, the worktree to work in, the spec (a plan, RFC or task file path and the sections that
 bind), the items you own, the files you may write, and what sibling agents are touching. If the
 repository, the worktree or the items are missing, stop and say which.
 
