@@ -14,7 +14,6 @@ the promotion test and a permanently-lit alarm stops being an alarm.
 
 - [The seven outcomes](#the-seven-outcomes) — what a pass does to one entry
 - [Moving a batch of entries into a skill](#moving-a-batch-of-entries-into-a-skill)
-- [Converting an older entry to your current template](#converting-an-older-entry-to-your-current-template)
 - [What the pass owes when it ends](#what-the-pass-owes-when-it-ends)
 
 ## The seven outcomes
@@ -140,23 +139,6 @@ that turned out to be the opposite of what the source entry, and the tool's own 
 checker, or your own gate, and is found for you. A bare slug in prose dangles in silence and is found only
 by `grep`. A quoted slug inside a historical account is neither — it is evidence that the string was
 written, and it stays.
-
-## Converting an older entry to your current template
-
-Entries written before your durable-facts type had a fixed shape carry a schema of their own. Convert one
-whenever a pass touches it, rather than in a sweep. A shape that works:
-
-| Old field | Becomes |
-|---|---|
-| a bare `tool:` field naming a tool and version | `scope: <name@version>` |
-| a bare list of repositories the fact applies to | `scope:` naming what the fact is true **of** — the CLI, the model server, the habit. Where the answer is a path instead, the entry is a trap/debt-log entry and this conversion does not apply |
-| a plain `verified:` date | `attempted: YYYY-MM-DD` |
-| — | your template's own stamp, as the first frontmatter key, if your type carries one |
-
-The body gains whatever sections your current template names — commonly a statement of the fact, the
-evidence, and where it applies — plus a note that the entry records what was learned on a date rather than
-current truth. A "why it matters" section folds into "where it applies"; a "how to apply" section is the
-signal that the entry was a procedure, so ask the moment question before converting it.
 
 ## What the pass owes when it ends
 

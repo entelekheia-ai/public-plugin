@@ -201,8 +201,10 @@ and the evidence and where it applies in the body. An entry records what was kno
 date, not a current truth; the next pass re-verifies it. If a closely related entry exists, **refine it instead
 of adding a near-duplicate** — near-duplicates are how a base stops being readable.
 
-**`project/learnings/` is one example layout for this store, never the required one** — use whatever
-surface your own repository has, or start one there if it has none. If your setup carries a richer backend
+**By default, one file per entry at `docs/learnings/<slug>.md`**, the slug being the claim shortened, from
+the template in [`references/entry-templates.md`](references/entry-templates.md). If your repository
+already keeps such a store — a governance folder, a notes directory — use it instead; the admission test
+is what matters, not the folder. If your setup carries a richer backend
 for this kind of record — one optional example is [vibe-ops](https://github.com/entelekheia-ai/vibe-ops),
 which can supply a template and an index of trap and debt entries — use its template
 and commands; otherwise write the entry directly, and regenerate whatever index your setup keeps, if any,
@@ -217,7 +219,9 @@ If you cannot, the fact has no locatable place to recur, and it is a decision (a
 repository's own trap/debt log, and only a path that is the workspace's own (its scripts, its shared
 config, its root instruction file) belongs to the root.
 
-`project/log/` is one example layout for this log, never the required one. Without a tool to write these
+**By default it goes to `docs/learnings/traps/<slug>.md`**, from the template in
+[`references/entry-templates.md`](references/entry-templates.md), or to your repository's own log if it
+has one. Without a tool to write these
 for you, write the entry by hand, one file per entry named by a short slug (never a number), with: a
 `path:` where it recurs, a `kind:` (below), the date, **what was attempted, what happened, the mechanism
 — or "not established" when the cause is not known, which is better than a guess — and the evidence**.
@@ -241,6 +245,15 @@ instead, never to a fact log.
 procedure fires — *about to write a rule*, *about to close a plan*, *about to delegate*. If you cannot
 name one, the fact is not a skill: a prescription that must be true before anyone starts is a **rule**, and
 a prescription with no doer at all is a durable-facts entry or nothing.
+
+**Which skills this may edit.** Only skills you own locally: a project's own (`.claude/skills/`,
+`.agents/skills/`) or your user-level ones (`~/.claude/skills/`). **Never edit the installed copy of a
+plugin's skill** — the next plugin update overwrites it, and the change is lost without a word. When the
+fact belongs to a plugin's skill, **ask the user how they want it carried** before doing anything: an
+issue needs a code host they may not use (some run Claude Code over a notes vault, with no repository at
+all), and a plugin of their own has its own flow — an issue, a pull request, a direct edit in its source
+repository followed by a release. Follow the flow you know they use; when you do not know it, ask. A
+local skill that complements the plugin's is one option to offer.
 
 **Three questions find the moment, name the home, and decide whether the skill is worth existing.** The
 first two are not eliminating; the third is.
@@ -398,9 +411,8 @@ existing written instruction unnecessary? Then delete that instruction — in a 
 growth costs: an always-on block passes a relevance gate as a whole, so a redundant line degrades the ones
 that still matter. Ask it out loud even when the answer is "nothing".
 
-**Consolidation runs when the tier is over budget, or on request.** Its seven outcomes, the procedure for
-moving a batch of entries into a skill, and the conversion of an older entry into your own current
-template are in
+**Consolidation runs when the tier is over budget, or on request.** Its seven outcomes and the procedure
+for moving a batch of entries into a skill are in
 [`references/consolidating-the-base.md`](references/consolidating-the-base.md). Read
 it when this run is the consolidate mode, or when a demotion turns out to affect more than one entry.
 
