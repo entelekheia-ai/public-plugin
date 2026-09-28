@@ -52,7 +52,9 @@
       "gate": "classification",
       "label": "private-name-everywhere",
       "paths": [
-        "**/*"
+        "**/*",
+        "**/.*",
+        "**/.*/**"
       ],
       "options": {
         "level": "secret",

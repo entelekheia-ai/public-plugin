@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "delegation",
-    "method"
+    "method",
+    "publishing"
   ],
   "scripts": {
     "version": "changeset version && node scripts/sync-versions.mjs"

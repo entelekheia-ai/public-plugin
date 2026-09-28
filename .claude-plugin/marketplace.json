@@ -36,6 +36,20 @@
       ]
     },
     {
+      "name": "publishing",
+      "source": "./publishing",
+      "description": "Take the skills and agents you wrote for yourself and publish them without shipping what only you have.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": [
+        "publish",
+        "skills",
+        "agents",
+        "sanitize",
+        "catalog"
+      ]
+    },
+    {
       "name": "vibe-ops",
       "source": {
         "source": "git-subdir",
