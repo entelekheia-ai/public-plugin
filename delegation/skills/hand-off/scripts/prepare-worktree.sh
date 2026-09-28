@@ -5,11 +5,13 @@
 #   sh prepare-worktree.sh <repo> <branch> [base]
 #
 # Fetches when the repository has an `origin` remote, creates <repo>/.claude/worktrees/<branch> on a new
-# branch <branch> from [base] (default: origin's own default branch, or the main checkout's own current
-# branch when there is no origin — see resolve_default below), and runs `npm ci` when the tree has a
-# package-lock.json. Prints the worktree path on the last line. Refuses when the branch or the directory
-# already exists, rather than reusing either: a branch checked out twice advances in both places. Refuses
-# with "pass a base" when no default resolves and none was given.
+# branch <branch> from [base] (default: origin's own default branch, resolved only among origin's own refs
+# when there is an origin, else the main checkout's own current branch — see resolve_default below), and
+# runs `npm ci` when the tree has a package-lock.json. Prints the resolved base to stderr, then the
+# worktree path to stdout on the last line. Refuses when the branch or the directory already exists,
+# rather than reusing either: a branch checked out twice advances in both places. Refuses with "pass a
+# base" when no default resolves and none was given, and with a clear message (not git's own raw error)
+# when the base, resolved or given, does not exist.
 set -eu
 
 repo=${1:?usage: prepare-worktree.sh <repo> <branch> [base]}
@@ -24,31 +26,33 @@ else
 fi
 dir="$repo/.claude/worktrees/$branch"
 
-# Prints the repository's default branch/ref on stdout and returns 0, or prints nothing and returns 1
-# when none resolves. Every step is its own guarded `if`, so a failure here never trips this script's own
-# `set -e` — a failing command that is itself the condition of an `if` does not. Kept identical to
-# finished-worktrees.sh's own copy: no shared lib file, so each script stays runnable on its own.
+# Prints the repository's default ref, as a full refname, on stdout and returns 0, or prints nothing and
+# returns 1 when none resolves. Every step is its own guarded `if`, so a failure here never trips this
+# script's own `set -e` — a failing command that is itself the condition of an `if` does not. Kept
+# identical to finished-worktrees.sh's own copy: no shared lib file, so each script stays runnable on its
+# own; a change to one must be copied into the other by hand.
 resolve_default() {
   r=$1
   if git -C "$r" remote get-url origin >/dev/null 2>&1; then
-    if ref=$(git -C "$r" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null); then
+    if ref=$(git -C "$r" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null); then
       printf '%s\n' "$ref"
       return 0
     fi
-    for cand in origin/main origin/master; do
+    for cand in refs/remotes/origin/main refs/remotes/origin/master; do
       if git -C "$r" rev-parse --verify -q "$cand^{commit}" >/dev/null 2>&1; then
         printf '%s\n' "$cand"
         return 0
       fi
     done
+    return 1 # origin exists but none of its own refs resolve — never fall back to a local branch
   fi
-  for cand in main master; do
-    if git -C "$r" rev-parse --verify -q "refs/heads/$cand" >/dev/null 2>&1; then
+  for cand in refs/heads/main refs/heads/master; do
+    if git -C "$r" rev-parse --verify -q "$cand^{commit}" >/dev/null 2>&1; then
       printf '%s\n' "$cand"
       return 0
     fi
   done
-  if ref=$(git -C "$r" symbolic-ref --short HEAD 2>/dev/null); then
+  if ref=$(git -C "$r" symbolic-ref HEAD 2>/dev/null); then
     printf '%s\n' "$ref"
     return 0
   fi
@@ -64,9 +68,14 @@ if [ -n "${3:-}" ]; then
 elif base=$(resolve_default "$repo"); then
   :
 else
-  echo "prepare-worktree: could not resolve a default branch — no origin/HEAD, no origin/main, no origin/master, and the main checkout has no branch of its own (detached HEAD). Pass a base." >&2
+  echo "prepare-worktree: could not resolve a default branch — no origin/HEAD, no origin/main, no origin/master, and (with no origin) neither refs/heads/main, refs/heads/master nor the main checkout's own branch (detached HEAD). Pass a base." >&2
   exit 1
 fi
+if ! git -C "$repo" rev-parse --verify -q "$base^{commit}" >/dev/null 2>&1; then
+  echo "prepare-worktree: the base '$base' does not exist in $repo" >&2
+  exit 1
+fi
+echo "prepare-worktree: base $base" >&2
 
 if git -C "$repo" show-ref --verify --quiet "refs/heads/$branch"; then
   echo "prepare-worktree: branch $branch already exists — pick another name or reuse its worktree" >&2

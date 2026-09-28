@@ -166,16 +166,20 @@ path.
 ## Clean up — after the merge, nothing is left behind
 
 ```sh
-sh ${CLAUDE_SKILL_DIR}/scripts/finished-worktrees.sh <repo>
+bash ${CLAUDE_SKILL_DIR}/scripts/finished-worktrees.sh <repo>
 ```
 
-It prints each worktree as `merged`, `leftover` (an isolated subagent's worktree kept because it ended on
-a detached HEAD, but whose commit is contained in some other branch — nothing there is unique to it),
-`detached-unpushed` (also a detached HEAD, but holding a commit no branch contains — not safe to remove),
-`dirty` or `open`, and removes nothing. Fast-forward the main checkout (`git pull --ff-only`), then remove
-each `merged` and `leftover` worktree with `git worktree remove` and delete its branch. Look inside a
-`dirty` or `detached-unpushed` one before touching it. A newly merged definition or skill loads in the
-next session, not in the current one.
+It prints each worktree as `merged` (every commit is on the default branch already), `leftover` (a
+`worktree-agent-*` branch, or a detached HEAD, with nothing the default branch or a remote-tracking branch
+lacks), `detached-unpushed` (a detached HEAD holding a commit nothing else contains), `dirty` (uncommitted
+or untracked files), `unreadable` (`git status` itself failed there — a missing directory, a permissions
+problem) or `open` (still in flight), and removes nothing. **Only `merged` and `leftover` are ever safe to
+remove** — never `open`, `dirty`, `detached-unpushed` or `unreadable`. Fast-forward the main checkout
+(`git pull --ff-only`), then for each `merged` or `leftover` worktree: `git worktree remove`, then `git
+branch -d` (never `-D`) — git's own refusal to delete an unmerged branch is the last guard, and forcing
+past it defeats the whole classification above. Look inside a `dirty`, `detached-unpushed` or
+`unreadable` one before touching it. A newly merged definition or skill loads in the next session, not in
+the current one.
 
 When an escalation fired, the delegation that failed and the one escalated to are judged each on its own
 result: the pair is the measurement the routing row lacks.
