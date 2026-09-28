@@ -38,6 +38,30 @@ Every hit carries `file:line` and the quoted text.
 **A name is not private because it looks internal.** The caller may say which of their own public
 products may stay as a reference; follow that. When you cannot tell, list it as a question, not a hit.
 
+## An edit list, for what is mechanical
+
+For every A or C hit whose fix is mechanical — a name to swap, a path to replace, a block to delete — add
+an entry to an edit list in this exact shape, so a cheaper agent (`edit-applier`) can apply it and the
+caller can check it by diff:
+
+````text
+### E<n>
+file: <path>
+action: replace | delete | insert-after
+old:
+```
+<the exact text as it is in the file now — enough lines to appear only once, leading spaces included>
+```
+new:
+```
+<the exact replacement>             (absent for delete)
+```
+````
+
+Leave out anything that needs judgement to rewrite — a paragraph to generalize, a description to redraft.
+List those separately as "rewrite needed", with `file:line` and what the rewrite must achieve. Your
+entries are proposals: the caller triages them before anything is applied.
+
 ## Verdict per item
 
 `publish as is`, `publish after edits (S/M/L)`, `split`, or `drop`, with one sentence of reason, and a

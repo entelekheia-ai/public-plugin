@@ -7,8 +7,8 @@ The `entelekheia` Claude Code marketplace: small plugins, one folder each, insta
 |---|---|---|
 | `.claude-plugin/marketplace.json` | — | The catalog. Local plugins by relative path; `vibe-ops` by `git-subdir` from its own repository |
 | `delegation/` | `delegation` | Where delegated work runs, on which model, and how it crosses the hand-off |
-| `method/` | `method` | Carry a plan through its remaining tracks unattended, paced against the usage limit and the context window |
-| `publishing/` | `publishing` | The workflow that publishes an item into this catalog: `publish` and the `extraction-auditor` agent |
+| `method/` | `method` | Carry a plan through its remaining tracks unattended, paced against the usage limit and the context window; route what the work taught to the surface built for it |
+| `publishing/` | `publishing` | The workflow that publishes an item into this catalog: `publish`, and the `extraction-auditor` and `edit-applier` agents |
 
 ## Rules
 

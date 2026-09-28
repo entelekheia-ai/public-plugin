@@ -109,7 +109,19 @@ the publication. A decision that lives only in the conversation is lost at the n
 
 ## Step 5 — Generalize
 
-Apply the audit's verdicts. What a published item must hold:
+Apply the audit's verdicts, split by what each edit needs:
+
+- **Mechanical edits** — a name, a path, a block to delete, each with its exact old and new text: triage
+  the auditor's edit list, then hand it to the `edit-applier` agent (it runs on a small, cheap model) or
+  apply it yourself. Accept the result **by diff**: every changed line must belong to an entry of the
+  list, and every entry reported as not applied gets looked at.
+- **Rewrites** — a paragraph to generalize, a description to redraft: do them yourself, or give them to a
+  capable implementer with the audit and your triage. A small model rewriting prose is where the
+  generalization goes wrong quietly; read any prose it produced in full.
+- **Wiring the plugin into the catalog** — manifests, a workspace entry, the marketplace entry, a
+  changeset: deterministic, so a script or your own hands, not an agent.
+
+What a published item must hold:
 
 - **It works without the plugin's agents.** A skills-only install (`npx skills add`) carries no agents and
   no hooks; where a skill mentions an agent, it says what to do without it. State what a hookless install
@@ -120,10 +132,16 @@ Apply the audit's verdicts. What a published item must hold:
   `claude plugin validate --strict` accepts both.
 - **Every script it runs ships with it**, carries the catalog's license header if it has one, finds its tools on `PATH` (never a
   fixed `/usr/bin/…`), and degrades with a clear message when a tool is missing.
-- **Paths to its own files** use `${CLAUDE_SKILL_DIR}`, which resolves in a plugin install and a
-  skills-only one alike — never a path relative to wherever the user happens to be. Keep
-  `${CLAUDE_PLUGIN_ROOT}` for files outside the skill's folder (a plugin's hooks), and say what a
-  skills-only install loses there.
+- **Paths a command runs** start from the skill-directory variable (`CLAUDE_SKILL_DIR`, written with
+  `${` `}` around it in a real path), which resolves in a plugin install and a skills-only one alike —
+  never a path relative to wherever the user happens to be. Keep the plugin-root variable
+  (`CLAUDE_PLUGIN_ROOT`) for files outside the skill's folder (a plugin's hooks), and say what a
+  skills-only install loses there. A Markdown link to a file inside the skill stays relative
+  (`references/x.md`): it works in Claude Code, on GitHub and in other harnesses, where the variable is
+  never substituted.
+- **Explain those variables without their braces.** Claude Code substitutes the braced form everywhere
+  in a skill's text when it loads it, so a sentence *about* the variable reaches the model as a machine
+  path — and prints the user's own path wherever the text is echoed.
 - **No note addressed to its author.** Review comments pasted into the text read to a model as orders.
 
 For a plugin that other harnesses should install too, add the manifest they read beside the Claude one

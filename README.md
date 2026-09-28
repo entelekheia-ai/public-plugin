@@ -5,7 +5,7 @@ Small Claude Code plugins, each one a group of skills and subagents you can inst
 | Plugin | What it gives you |
 |---|---|
 | `delegation` | Decide where delegated work runs — the main loop, one subagent or a Workflow — and which model and effort run it, from a routing table you tune to your own sessions |
-| `method` | Carry a plan through its remaining tracks unattended between them — paced against the usage limit and the context window, with maintainer questions batched instead of asked one at a time |
+| `method` | Carry a plan through its remaining tracks unattended between them, paced against the usage limit and the context window; and route what a piece of work taught to the surface built for that kind of fact |
 | `publishing` | Take the skills and agents you wrote for your own setup and publish them — inventory, compare with what is public, audit, triage, generalize, verify with gates and a blind review, release |
 | `vibe-ops` | Full repository governance: born-organized repos, AGENTS.md, ADRs, RFCs, plans and tasks from one source of truth ([its own repository](https://github.com/entelekheia-ai/vibe-ops)) |
 
