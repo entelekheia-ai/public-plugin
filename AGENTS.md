@@ -12,31 +12,26 @@ The `entelekheia` Claude Code marketplace: small plugins, one folder each, insta
 
 ## Rules
 
-- **Every file here is public.** A skill or agent names no machine path, private repository, internal tool or
-  measurement of its author's machine; it ships its defaults as a recommendation to tune.
-- **A skill works without the plugin's agents.** `npx skills` installs skills only, so an agent a skill
-  mentions is optional to it, never required.
-- **The plugin name is the prefix.** An agent in `delegation/agents/reviewer.md` is `delegation:reviewer`;
-  never repeat the group in the file name.
-- **The author's public products may be named as a reference, never as a requirement.** A skill may point
-  at one as an example or an option — `vibe-ops` as a plugin example beside others, or as a manager built on
-  deterministic gates; `ref-id` as the option when something needs one stable identifier for anything — and
-  should, where it fits. It never makes one an instruction the skill depends on. A product whose repository
-  is private, or that has nothing to do with the skill's subject, is not named at all: say the category
-  instead ("an observability tool", "a graph viewer").
-- **`ref:` identifiers appear only in READMEs and in scripts that locate packages, versions or excerpts** —
-  never inside a SKILL.md or an agent definition, where a model would read them as something to produce.
-- Before a commit: `vibe-ops check` from the repo root (`vibe-ops` must be on PATH). It composes this
-  repository's own gates from `.vibe-ops/ops.json`, one per line: `manifest-versions` — every workspace's
-  `package.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json` and marketplace entry agree
-  on its version, and the catalog and the workspaces list the same plugins; `plugin-validate` — `claude
-  plugin validate --strict` passes on the catalog root and on each plugin folder (SKIP when `claude` is
-  not on PATH); `license-text` — LICENSE is the Apache-2.0 text verbatim, except the appendix's own
-  copyright line; `private-name-everywhere` — the built-in `classification` gate over every file, not
-  only the Markdown the built-in `exposure` ops covers: no file names a term on the operator's own deny-list,
-  a path given in `VIBE_OPS_DENYLIST` (`label<TAB>pattern` per line), never committed; `skill-frontmatter` — every
-  `*/skills/*/SKILL.md` names its own folder, carries a description, and agrees with itself about
-  `user-invocable`/`user_invocable`.
+- A skill or agent **MUST NOT** name a machine path, private repository, internal tool or measurement of
+  its author's machine; it **SHOULD** ship its defaults as a recommendation to tune instead.
+- A skill **MUST** work without the plugin's agents: an agent it mentions **MUST** be optional to it, never
+  required — `npx skills` installs skills only.
+- An agent's name **MUST** carry its plugin as a prefix (an agent in `delegation/agents/reviewer.md` is
+  `delegation:reviewer`) and **MUST NOT** repeat the group name in the file name.
+- A skill **MAY** name one of the author's own public products as an example or an option beside others —
+  `vibe-ops` as a plugin example, or as a manager built on deterministic gates; `ref-id` as the option when
+  something needs one stable identifier — and **SHOULD**, where it fits. It **MUST NOT** make one an
+  instruction the skill depends on. A product whose repository is private, or that has nothing to do with
+  the skill's subject, **MUST NOT** be named at all: name the category instead ("an observability tool",
+  "a graph viewer").
+- A `ref:` identifier **MUST** appear only in a README or in a script that locates a package, version or
+  excerpt. It **MUST NOT** appear inside a SKILL.md or an agent definition, where a model would read it as
+  something to produce.
+- Before a commit, `vibe-ops check` **MUST** pass from the repo root (`vibe-ops` **MUST** be on PATH). It
+  composes this repository's own gates from `.vibe-ops/ops.json`; each gate's header comment in
+  `.vibe-ops/gates/<name>/index.mjs` states what it checks and why. `private-name-everywhere` is the
+  built-in `classification` gate, with no file here: it reads the operator's deny-list from the path in
+  `VIBE_OPS_DENYLIST` (`label<TAB>pattern` per line), which is never committed.
 
 ## Releases
 
@@ -59,7 +54,7 @@ The `entelekheia` Claude Code marketplace: small plugins, one folder each, insta
 - Non-code example/fixture files need no header either.
 - Source files (`*.js *.mjs`) carry a one-line SPDX header at the top:
 
-  ```
+  ```js
   // SPDX-License-Identifier: Apache-2.0
   ```
 

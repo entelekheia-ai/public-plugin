@@ -20,6 +20,12 @@ A rule is loaded into **every session** that matches its `paths:` (or every sess
 none). Its cost is paid on every turn; its benefit is paid only when it changes what someone does. Write
 for that ratio.
 
+**What counts as a rule here.** A rules file (`.claude/rules/<name>.md`, or a canonical copy another
+harness reads) gets every step below. A rules *section* inside a larger always-on file — the "Rules" of an
+`AGENTS.md` or `CLAUDE.md` — gets Steps 1–4, and Steps 5–6 bullet by bullet; it has no frontmatter of its
+own and cannot be scoped by `paths:`, so the Frontmatter and Placement sections do not apply to it. A list
+of unrelated policies is several rules sharing a heading: apply each step to each bullet, not to the list.
+
 ## The premise
 
 This skill's premise, and not open for re-argument here — only its application is:
@@ -40,8 +46,11 @@ For each section, ask: **does a versioned README, skill, or script already own t
 section and leave a one-line pointer. Do not paraphrase it shorter. Relocation beats compression by a wide
 margin whenever a section only restates something already versioned and linked elsewhere.
 
-You **MUST** confirm the destination actually holds the content before deleting it here. Grep the target;
-do not assume.
+You **MUST** confirm the destination actually holds the content before deleting it here: open it where it
+lives and find the same obligation stated there, one destination per item. A shared index that lists
+several items (a config that names each check) is not a destination for any of them; each item's own file
+is. An item with no file of its own — a built-in the index only names — has no destination, and its line
+stays.
 
 ## Step 2 — Cut what leaves behaviour unchanged
 
