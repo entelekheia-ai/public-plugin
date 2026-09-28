@@ -64,10 +64,13 @@ Everything below serves one of those two. For "how do I dispatch and verify a tr
 of this skill, not its text, and a summary drops exactly the steps that have not happened yet — measured
 once: a run resumed from its summary skipped Step 8's `routed false` and never opened the plan's read-first
 list, while every step it did take looked right. So the first act after a compaction is `/run-plan
-continue`, typed by the user or invoked by the model before anything else, and it does four things in
+continue`, typed by the user or invoked by the model before anything else, and it does five things in
 order: read the notes (top of this file); read the state file (`state.sh show`); read the plan's "Read
-these first" section, if it has one, in its order; then a track still `running` — its worktree and
-notes first, since a compaction may have cut it mid-edit — and only then Step 4. The hooks below put that command in front
+these first" section, if it has one, in its order; invoke again every other skill the run was using —
+routing, hand-off, publishing, whichever it called before the compaction — since the summary holds a
+retelling of those too, and their references (a brief checklist, a template) are exactly what a
+retelling drops; then a track still `running` — its worktree and notes first, since a compaction may
+have cut it mid-edit — and only then Step 4. The hooks below put that command in front
 of both the model and the user; without them, it is the user's to type — so a run without the hooks
 tells the user, once, at Step 2: "after a compaction, send `/run-plan continue`".
 
@@ -98,16 +101,16 @@ options=A|B recommend=<A>` appends to its `questions[]`, and the run's final rep
 surface for the maintainer. Wherever this file says to add an "Open questions" section, the state file's
 `questions[]` is the fallback when the plan cannot carry that section itself.
 
-If the repository runs [vibe-ops](https://github.com/entelekheia-ai/vibe-ops) (also listed in this catalog), its plan and task-dossier
+If the repository runs [vibe-ops](https://github.com/entelekheia-ai/vibe-ops) (also listed in this catalog), its plan and task
 format is a richer, optional backend: `vibe-ops task resolve --json` prints a tasks directory, a template
-and the next number, so each track gets a numbered dossier instead of a scratch note. Nothing here requires
+and the next number, so each track gets a numbered task file instead of a scratch note. Nothing here requires
 it.
 
 ## Three outcomes for every question the run meets
 
 | The question | Outcome | What happens |
 |---|---|---|
-| answerable from the plan, its spec, the code or the repository's own conventions — including a plan sentence that turns out wrong, as long as correcting it leaves the track delivering what the plan promised | **ruling** | decide it, write down `Ruling: <what> — <why> — <cost if wrong>` next to the track (in its dossier, or in the plan itself), continue |
+| answerable from the plan, its spec, the code or the repository's own conventions — including a plan sentence that turns out wrong, as long as correcting it leaves the track delivering what the plan promised | **ruling** | decide it, write down `Ruling: <what> — <why> — <cost if wrong>` next to the track (in its task file, or in the plan itself), continue |
 | a decision the plan reserves to whoever is driving the run — "may not be delegated", "decided by the caller" | **main loop** | this session is that caller: take the decision yourself, do the track without an implementer, and record it as a ruling |
 | a decision the plan leaves to the maintainer, a review finding that reverses a plan decision or widens the track, a correction that changes what the track delivers, or a gate that still fails after one retry | **park** | write it under the plan's Open questions (or `state.sh question`, see above) — naming the track, two to four options and the one you recommend — leave the track's work committed or reverted, and move to the next runnable track |
 | the next act is outward-facing (push, pull request, merge, publish, release); the worktree holds changes this run did not make on files a track owns; the budget check says wait; no track is runnable and no question can be asked | **halt** | end the run |
@@ -162,7 +165,7 @@ S="sh ${CLAUDE_SKILL_DIR}/scripts/state.sh"
 $S init <plan> <repo> <worktree> <branch> <base>      # learnings_routed starts false; refuses if a file already exists — resume it, don't restart
 $S track "Track 2" by=implementer depends="Track 1"    # adds the row as runnable
 $S track "Track 2" status=waiting                      # its dependency isn't done yet
-$S track "Track 2" status=running task=<dossier path>
+$S track "Track 2" status=running task=<task file path>
 $S track "Track 2" status=done commit=<sha>            # commit= appends; repeat it, in one call or several
 $S track "Track 1" status=done commit=<sha>            # right after init, for each track that landed before it
 $S question "does X take Y?" track="Track 3" options="yes|no" recommend="no"
@@ -212,7 +215,7 @@ whose dependencies just landed becomes `runnable` here. None left: go to Step 8'
 Give the track enough written context before its work starts — the track's spec quoted from the plan, its
 acceptance line, the gate commands, the files it owns, the decisions already taken for it — whether an
 implementer or you does the work. If the repository runs vibe-ops, that's `vibe-ops task resolve --json`
-and a numbered dossier as described above; otherwise, a scratch note under the track heading in the plan
+and a numbered task file as described above; otherwise, a scratch note under the track heading in the plan
 file, or a file next to it, serves the same purpose.
 
 **Two tracks run at once only when their write sets are disjoint**, and the second starts only when the

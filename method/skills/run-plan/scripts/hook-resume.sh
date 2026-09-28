@@ -26,7 +26,7 @@ FIRST ACT, before reading files or answering: invoke the Skill tool with skill \
 Track in progress: $running — check its worktree and notes before dispatching anything."
 context="$context
 Next runnable track: $next. Waiting tracks: $waiting. Parked tracks: $parked. Halted tracks: $halt. Unanswered questions: $unanswered.
-State file: $state. If the plan has a \"Read these first\" section, read it, in order, before Step 4."
+State file: $state. If the plan has a \"Read these first\" section, read it, in order, then invoke again every other skill the run was using before the compaction (routing, hand-off, publishing — the summary names them), and only then go to Step 4."
 [ "$routed" = true ] || context="$context
 What this run learned before compaction was not written down yet: do that with whatever practice this repository uses, then run: sh \"$dir/state.sh\" routed true"
 
