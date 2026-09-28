@@ -1,7 +1,7 @@
 ---
 name: run-plan
 description: 'Carry several remaining tracks of a plan through to landing, unattended between them — pacing the run against the usage limit and the context window, and batching every question that needs the maintainer instead of asking one per track. Fires when several tracks are left, the run should proceed unattended, and pacing or batched questions are wanted; for driving a single track inline, use executing-plans instead. Use when asked to run, drive or continue a plan track by track, or "/run-plan <plan>".'
-argument-hint: '[plan-path]'
+argument-hint: '[plan-path | continue]'
 arguments: plan
 user-invocable: true
 user_invocable: true
@@ -16,7 +16,8 @@ more specific one wins. They hold what earlier runs taught; see the last section
 Fires when a plan has **several remaining tracks** and the run should proceed **unattended between
 them** — the only input the maintainer would otherwise give is "go on" — with the run **paced** against
 the usage limit and context window, and its questions **batched** rather than asked one per track. The
-plan is `$plan`. At the end, every track that could move is committed, every question that needed the
+plan is `$plan` — or, when that says `continue` or is empty, the plan this session's state file records
+(`state.sh show`), or, without one, the plan the compaction summary names — and if none does, ask. At the end, every track that could move is committed, every question that needed the
 maintainer was asked in a batch, and a report on disk says where the run stopped.
 
 A single track, or a run where nobody needs pacing or batching, does not need this skill — see the next
@@ -53,9 +54,22 @@ Everything below serves one of those two. For "how do I dispatch and verify a tr
 ## Start it in the surface that can pace it
 
 - `/run-plan <plan-path>` runs until it halts.
+- `/run-plan continue` resumes the run this session's state file records — the one command after a
+  context compaction.
 - `/loop /run-plan <plan-path>` runs until it halts and can also wait out the usage limit, because
   `ScheduleWakeup` exists only inside `/loop` without an interval — confirmed for the `loop` skill
   shipped with Claude Code; a third-party equivalent may not offer it.
+
+**After a compaction, the resume is an invocation, not a memory.** A compacted session holds a summary
+of this skill, not its text, and a summary drops exactly the steps that have not happened yet — measured
+once: a run resumed from its summary skipped Step 8's `routed false` and never opened the plan's read-first
+list, while every step it did take looked right. So the first act after a compaction is `/run-plan
+continue`, typed by the user or invoked by the model before anything else, and it does four things in
+order: read the notes (top of this file); read the state file (`state.sh show`); read the plan's "Read
+these first" section, if it has one, in its order; then a track still `running` — its worktree and
+notes first, since a compaction may have cut it mid-edit — and only then Step 4. The hooks below put that command in front
+of both the model and the user; without them, it is the user's to type — so a run without the hooks
+tells the user, once, at Step 2: "after a compaction, send `/run-plan continue`".
 
 Run it in an interactive session in the foreground when possible. Claude Code can resume a task by itself
 when the usage limit resets ("Automatic continue", set in `/rate-limit-options`); **unconfirmed from the
@@ -291,15 +305,18 @@ This skill ships two optional pieces that work only where this plugin's `hooks/h
 
 - **`scripts/hook-precompact.sh`** (a `PreCompact` hook) folds the run's position into the compaction
   summary before it happens, so a run survives an automatic context compaction without losing track of
-  which track it was on.
-- **`scripts/hook-resume.sh`** (a `SessionStart` hook, matcher `compact`) tells the model where the run
-  stood right after that compaction finishes.
+  which track it was on, and asks the summary to name the invocation (`/method:run-plan continue` in a plugin install) as the
+  first action after it.
+- **`scripts/hook-resume.sh`** (a `SessionStart` hook, matcher `compact`) answers in JSON right after that
+  compaction finishes: a `systemMessage` shows the user the one command that resumes the run, and
+  `additionalContext` tells the model where the run stood and that invoking this skill with `continue` is
+  its first act.
 
 Both read the state file at `~/.claude/plan-runs/<session id>.json` (see Step 2). A skills-only install
 (no hooks) still runs this skill end to end, including `scripts/state.sh` and `scripts/budget.sh` — it
-only loses the automatic carry-over across a compaction it didn't see coming: after one, re-read the plan
-and the state file (if it survived) before continuing at Step 4, or invoke this skill again to pick the
-position back up from what's committed on the branch.
+only loses the automatic carry-over across a compaction it didn't see coming: after one, send `/run-plan
+continue` yourself — it re-reads the state file, or, if that did not survive, picks the position back up
+from the plan and what is committed on the branch.
 
 **`scripts/budget.sh`** is the pacing check Step 8 describes. It reads a per-session context reading and,
 separately, the 5-hour usage window, and prints one verdict — `continue`, `record-learnings`, `wait

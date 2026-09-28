@@ -14,7 +14,9 @@ A plan run (the run-plan skill) is in progress (state file: $state). Preserve ve
 the plan path, the repository and worktree, each finished track with its commit, the track in
 progress and how far it got, each parked track with its question, the path of every open task note
 or dossier, and — one line each — anything learned since the last time it was written down that has
-not been written down yet.
+not been written down yet. End the summary's next step with this, as its first action: invoke the
+Skill tool with skill "method:run-plan" and args "continue" — the skill's full text does not survive
+the compaction, and a summary that only says "continue at Step 4" gets followed from memory.
 EOF
 if [ -n "$unanswered" ]; then
   echo "Unanswered questions in the state file's questions[]:"
