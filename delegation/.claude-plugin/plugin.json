@@ -1,0 +1,16 @@
+{
+  "name": "delegation",
+  "version": "0.1.0",
+  "description": "Decide where delegated work runs and on which model, and carry it across the hand-off.",
+  "author": {
+    "name": "Danilo Borges",
+    "url": "https://github.com/daniloborges"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "subagents",
+    "delegation",
+    "model-routing",
+    "workflow"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "entelekheia-public-plugin",
+  "private": true,
+  "workspaces": [
+    "delegation"
+  ],
+  "scripts": {
+    "version": "changeset version && node scripts/sync-versions.mjs"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.1"
+  }
+}

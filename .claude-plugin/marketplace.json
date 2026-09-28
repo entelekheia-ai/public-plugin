@@ -1,0 +1,45 @@
+{
+  "name": "entelekheia",
+  "owner": {
+    "name": "Danilo Borges",
+    "url": "https://github.com/daniloborges"
+  },
+  "metadata": {
+    "description": "Entelékheia — small Claude Code plugins for delegation and method, plus vibe-ops for full repository governance.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "delegation",
+      "source": "./delegation",
+      "description": "Decide where delegated work runs and on which model, and carry it across the hand-off.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": [
+        "subagents",
+        "delegation",
+        "model-routing",
+        "workflow"
+      ]
+    },
+    {
+      "name": "vibe-ops",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/entelekheia-ai/vibe-ops.git",
+        "path": "plugin"
+      },
+      "description": "Born-organized repos: set up or reconcile repos/monorepos and author their governance docs (AGENTS.md, ADR, RFC, plans, tasks, license, README) from one shared source of truth.",
+      "category": "development",
+      "keywords": [
+        "scaffold",
+        "monorepo",
+        "governance",
+        "adr",
+        "rfc",
+        "plan",
+        "agents-md"
+      ]
+    }
+  ]
+}
