@@ -82,10 +82,16 @@ Read the output with three limits in mind:
 
 A family seen in one session only is a task that fanned out, not a recurrence. Nothing below applies to it.
 
+**The unit of evidence is the piece of work, not the session id.** One long session can carry several
+separate tasks — a plan run across its tracks, resumed across a compaction — and a role it dispatched for
+each of them has recurred, even though every call shares one session id. When the window holds few, long
+sessions, count the distinct tasks a role's calls served, read from their variable half, in place of
+sessions, and say in the report that you did. One task fanned out into batches still counts once.
+
 **No family at all is a result, not a failure of the run.** When no fixed sentence is shared across
 sessions, lowering `--threshold` finds nothing more, because the shared sentences are what is missing: the
 briefs in this repository are written from scratch each time. Group the one-off calls by what the agent
-is asked to do, from their descriptions, and open the prompts only of a group that spans two sessions. An
+is asked to do, from their descriptions, and open the prompts only of a group that spans two sessions, or two distinct tasks of one long session. An
 audit that finds no recurring role ends there, with a Step 3 table whose surfaces are all **nothing** and
 the not-yet-reused list — that is the audit done.
 
@@ -95,7 +101,7 @@ Print a family's prompts with `--show=<n>` (add `--session=<id>` when the family
 with `--prompt=<i>,<j>,…`, and read them. A **role** is a set of calls that give the same kind of agent the
 same boundaries and ask for the same kind of report: *implement one change in one language behind its
 gate*, *review a range read-only*. Two calls differing only in which file or language they name are one
-role. Add to each role the one-off calls whose description and prompt match it.
+role. Add to each role the one-off calls whose description and prompt match it. A role whose agent was renamed inside the window — a definition moved into a plugin, a prefix changed — is still one role: group calls by what they ask, not by the agent's name. Where a role has more calls than you read, report each count as "k of the n read".
 
 For each role, write down two lists:
 
@@ -127,6 +133,7 @@ Two kinds of rule need a reading before they enter the fixed half:
 | has a fixed rule a program can check — a path never written, a verb never run, a tree left clean, a setup step | **hook** in that subagent's frontmatter, with the prose kept beside it |
 | is the caller's own sequence between delegations — prepare, dispatch, verify, commit, review, triage | not an agent: that is the `delegation:hand-off` skill's procedure |
 | has, as its only fixed rule, one a built-in agent type already enforces — read-only search, which `Explore` is by its tool set | **nothing** — dispatch the built-in type; a definition would restate what its tools already guarantee |
+| is already dispatched through a definition | **`review <definition>`** — repair it against these runs; every rule the briefs still restate is one the definition lacks |
 | appeared in one session, or its fixed half is two sentences | **nothing** — a subagent that fires once is a file nobody maintains |
 
 A definition shipped inside a plugin has its frontmatter `hooks` ignored by Claude Code, so for a plugin

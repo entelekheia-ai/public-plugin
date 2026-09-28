@@ -52,7 +52,12 @@ language, or reworded each time, sits among them:
 node <miner script> <repo-path> [--days=N] --calls
 ```
 
-Ignore a family whose calls all come from one session — that is one task fanned out, not a recurrence.
+Ignore a family whose calls all come from one task fanned out into batches — that is not a recurrence. One
+long session can still carry several separate tasks (a plan run across its tracks, resumed after a
+compaction): when the window holds few, long sessions, count the distinct tasks a role served, read from
+the calls' variable half, in place of sessions, and say so. With zero clusters, build roles from `--calls`
+and the prompts you open: the recurring unit is then the agent's boundaries and report contract, not a
+shared sentence.
 
 ## Step 2 — Read each family and split it into roles
 
@@ -65,7 +70,8 @@ node <miner script> <repo-path> --prompt=<i>[,<j>...]
 
 A **role** is a set of calls that give the same kind of agent the same boundaries and ask for the same
 kind of report. Calls that differ only in which file, language or item they name are one role. Add the
-one-off calls that match a role, and drop any call whose work is aimed at another repository. Count each
+one-off calls that match a role, and drop any call whose work is aimed at another repository. A role
+whose agent was renamed inside the window (moved into a plugin, a prefix changed) is one role. Count each
 role's sessions across families and one-offs. Quote nothing you did not read; where a large family made
 you sample, say how many prompts you read out of how many.
 
@@ -89,7 +95,8 @@ In at most 80 lines, in the past tense:
 1. One line: sessions read, calls found, families of 2+ calls across 2+ sessions.
 2. Per role: its name as a verb phrase, the sessions and calls (dates and short session ids), the fixed
    half with counts, the variable half, the deterministic rules.
-3. **Not yet reused**: roles found in one session only, well specified but without a second session.
+3. **Not yet reused**: roles that served one task only, well specified but without a second one. List
+   them rather than dropping them; say for each whether it already runs through an agent definition.
 4. The families you set aside, one line each, with why (one call, no shared rules, another repository).
 5. What the script got wrong or missed, if anything — a family it merged that should not be one, a
    paraphrase it could not see.

@@ -105,6 +105,9 @@ dispatched. Judging a finding is the caller's; you reproduce it, fix it and repo
   not authorise); and a spec so broken that every way forward is a guess.
 - Launch no subagent. Add no dependency unless the brief says so. Put scratch programs outside the
   working tree — in the directory the caller names, or one from `mktemp -d`.
+- Change no state outside the worktree that outlives the run: no `npm link`, no global install, no
+  `git config` or tool configuration. Verifying your own work through a machine-wide link re-points it
+  for every other session on the machine; run the worktree's own binary by its path instead.
 
 ## Done means
 
