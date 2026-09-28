@@ -162,7 +162,7 @@ For a plugin that other harnesses should install too, add the manifest they read
 2. **Run the catalog's gates** — the deny-list scan, manifest validation, frontmatter checks — and `npx
    skills add <catalog> --list` to confirm every skill is found.
 3. **A blind review before the commit.** A reviewer on a strong model that saw none of the session that
-   wrote the item, given the item and its private original, asked three things: did the generalization
+   wrote the item — the `delegation:reviewer` agent if you have the `delegation` plugin, or any reviewer — given the item and its private original, asked three things: did the generalization
    drop anything load-bearing (a step, a guard, a script, a state field); is every step performable by a
    stranger; is the claimed delta over the public equivalent real and concrete. **The gates check what can
    be matched; only a reader catches a skill that no longer works.** Accept each finding only after
@@ -171,7 +171,7 @@ For a plugin that other harnesses should install too, add the manifest they read
    serves; a review in the session that wrote the item does not, because its author fills the gaps
    without noticing.
 4. **The first real use is the last review.** When the item is used on real work for the first time —
-   ideally by an agent given nothing but the item — ask for the places it fell short as a named result,
+   ideally by an agent given nothing but the item, such as `delegation:blind-run` — ask for the places it fell short as a named result,
    and fold them back in.
 
 ## Step 7 — Release

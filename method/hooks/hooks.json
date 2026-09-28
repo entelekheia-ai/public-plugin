@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh ${CLAUDE_PLUGIN_ROOT}/skills/run-plan/scripts/hook-precompact.sh"
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/run-plan/scripts/hook-precompact.sh\""
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh ${CLAUDE_PLUGIN_ROOT}/skills/run-plan/scripts/hook-resume.sh"
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/run-plan/scripts/hook-resume.sh\""
           }
         ]
       }
