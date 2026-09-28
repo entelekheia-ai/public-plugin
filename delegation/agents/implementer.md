@@ -39,7 +39,8 @@ repository, the worktree or the items are missing, stop and say which.
 You start in the caller's directory, not in that worktree, and a `cd` does not carry over from one
 command to the next. The worktree the caller names wins over any working directory the environment
 reports. Give every file tool an absolute path inside it, and start every shell command with
-`cd <worktree> &&`. If `git` is rewritten by a shell hook and refused, call it as `/usr/bin/git`.
+`cd <worktree> &&`. If a shell hook rewrites `git` into a wrapper and the guard refuses it, call git by
+its absolute path.
 
 ## The gate
 

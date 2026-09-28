@@ -4,11 +4,6 @@ description: Write or rewrite an always-on agent rule — a rules file, such as 
 argument-hint: "[rule-file]"
 user-invocable: true
 user_invocable: true
-paths:
-  - ".claude/rules/*.md"
-  - "**/.claude/rules/*.md"
-  - ".agents/rules/*.md"
-  - "**/.agents/rules/*.md"
 ---
 
 # Authoring a rule
@@ -27,7 +22,7 @@ for that ratio.
 
 ## The premise
 
-Set by the maintainer, and not open for re-argument here — only its application is:
+This skill's premise, and not open for re-argument here — only its application is:
 
 > A final artifact text **MUST** carry only what is relevant to the task it governs. Historical narrative,
 > asides, and supporting numbers **MUST** be removed. It **MUST** be direct, clear and concise — most
@@ -93,8 +88,9 @@ it is meant to intercept has already fired.
 ## Step 6 — Prose or guard?
 
 If the rule is mechanically checkable, prose is the weaker half. Say so in the rule, and open the guard
-with `/new-signal` (prose + guard + fixture). A rule describing machinery that nothing enforces **SHOULD**
-name that gap rather than imply enforcement.
+with a skill that pairs prose, gate and fixture, such as vibe-ops's `/new-signal`, if you have one;
+otherwise write the prose, the guard and a fixture proving it fires yourself. A rule describing machinery
+that nothing enforces **SHOULD** name that gap rather than imply enforcement.
 
 ## Frontmatter — and when the rule actually loads
 
@@ -102,11 +98,11 @@ Per [the Claude Code memory docs](https://code.claude.com/docs/en/memory#organiz
 
 | Field | Use it for |
 |---|---|
-| `description` | Required in practice. What the rule asserts, in one sentence. |
+| `description` | Ignored by Claude Code — `paths` is the only field it reads from a rule. Kept for the human reader and for your own tooling: what the rule asserts, in one sentence. |
 | `paths` | YAML list of globs. **Its presence makes the rule conditional.** |
 
-Nothing else belongs on a rule. `model:` **MUST NOT** be set on any shipped rule or skill — it silently
-overrides the user's own session choice.
+Any other field is ignored without error, so nothing else belongs on a rule. `model:` **MUST NOT** be set
+on any shipped rule or skill — it silently overrides the user's own session choice.
 
 **Omitting `paths` is what makes a rule always-on.** A rule with no `paths` is loaded at launch, in every
 session, at the same priority as `.claude/CLAUDE.md`. Adding `paths` does the opposite: it withholds the
@@ -120,7 +116,7 @@ Choose by cost against that gap:
   since an edit is preceded by a read and the rule arrives in time. Always-on is the exception, for a
   guardrail whose violation is unrecoverable or whose only trigger is a first write.
 - The residual gap **MUST** be accepted knowingly: a path-scoped rule is absent while its first file is
-  being created from nothing. Maintainer decision — for rules governing rule text, that gap costs less
+  being created from nothing. This skill's position — for rules governing rule text, that gap costs less
   than the always-on context paid on every turn of every session.
 
 ```yaml
@@ -138,8 +134,12 @@ In that case:
 
 - Discovery is recursive over `.claude/rules/**/*.md`, and a symlinked rule is supported — the docs
   themselves prescribe `ln -s` for sharing rules.
-- `paths` matching resolves through a symlinked path into the project (Claude Code ≥ v2.1.198). Below that
-  version a path-scoped rule reached by symlink **MAY** silently never fire.
+- A path-scoped rule now matches when the target file is reached through a symlinked path to the project
+  directory (Claude Code ≥ v2.1.198). Below that version a path-scoped rule reached by symlink **MAY**
+  silently never fire.
+- A `.claude/rules/` symlink whose target sits outside the working directory is treated like an external
+  import: it loads only after external imports are approved for the project, and even then only a rule
+  with no `paths` loads.
 
 When a rule is suspected of not loading, the [`InstructionsLoaded`](https://code.claude.com/docs/en/hooks#instructionsloaded)
 hook **SHOULD** be used to log which instruction files loaded and when, rather than inferring it from
@@ -168,7 +168,7 @@ tooling and drifts.
 - [ ] Every **SHOULD** names its exception.
 - [ ] `paths` is present unless the rule is deliberately always-on, and, when a symlink bridge is in use,
       its globs cover both the canonical path and the `.claude/rules/` symlink, at the root and nested.
-- [ ] `rumdl check <file>` is clean.
+- [ ] Your Markdown linter is clean on the file.
 - [ ] When a symlink bridge is in use, it exists and is relative.
 - [ ] Any repository map naming the rule (`AGENTS.md`) is current.
 - [ ] Effectiveness is checked by a count of a measurable signal — a tool-usage log, for example — not by
@@ -197,4 +197,8 @@ What is worth noting, in this skill:
 - A rewrite that left Step 2's table incomplete: material that fit no row and was kept out of doubt, or a
   row that licensed cutting something load-bearing.
 - A rewrite that came out reading better but, measured afterward by a count rather than a re-read, moved
-  behaviour no further than before — and which of Steps 3–5 turned out to be the actual gap.
+  behaviour no further than before — and which of Steps 3–5 turned out to be the actual gap: when a
+  rewritten rule changes nothing, the defect sits in Step 4 (the boundary) or Step 5 (the guard), not in
+  the wording. A rule that reads better and measures the same is still broken.
+- A gap that spans several rules or skills, rather than one — route it with `/route-learnings` (the
+  `method` plugin ships it) instead of growing this file.

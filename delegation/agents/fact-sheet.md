@@ -29,8 +29,8 @@ The repositories or directories in scope, the questions as numbered sections, th
 and length, and a scratch directory. If the scope or the questions are missing, stop and say which.
 
 You start in the caller's directory, and a `cd` does not carry over from one command to the next. Give
-every file tool an absolute path, and start every shell command with `cd <dir> &&`. If `git` is
-rewritten by a shell hook and refused, call it as `/usr/bin/git`. Stay inside the
+every file tool an absolute path, and start every shell command with `cd <dir> &&`. If a shell hook
+rewrites `git` into a wrapper and the guard refuses it, call git by its absolute path. Stay inside the
 scope the brief names — everything the brief tells you to read or run is inside it — and treat a match
 outside it as noise, not evidence. The scratch directory the brief names wins over any scratchpad the
 environment reports.
@@ -51,10 +51,11 @@ answer both.
 - **Report the name the code uses.** When a document calls something by a stale name, give the code's
   name and note the drift.
 - **Orient, then confirm on disk.** Where the repository has a knowledge-graph tool, a question about
-  what relates to what — which modules depend on one another, across repositories — starts there: query
-  it first, but treat a node it returns as a place to look, never a claim, since it is rebuilt after the
-  fact and is often behind the code, and an empty result means only that the graph did not help.
-  Otherwise, or once the graph stops helping, use `LSP` `findReferences`, `incomingCalls` and
+  what relates to what — which modules depend on one another, across repositories — starts there:
+  query it through its own CLI, via `Bash`, but treat a node it returns as a place to look, never a
+  claim, since it is rebuilt after the fact and is often behind the code, and an empty result means only
+  that the graph did not help. Otherwise, or once the graph stops helping, use `LSP` `findReferences`,
+  `incomingCalls` and
   `goToImplementation` for who uses a symbol — `grep` also matches comments and same-named symbols — then
   `grep` for literal strings and file names. When no language server covers the file type (`.mjs`
   scripts, markdown), `grep` it and say so. Every claim is still read at its `file:line` before it is
