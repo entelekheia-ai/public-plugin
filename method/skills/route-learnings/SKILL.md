@@ -91,7 +91,8 @@ Gather without judging; judgement is Steps 2 and 3. Draw from whichever apply:
 - **This session** — what was discovered that nobody knew at the start. The strongest source, because the
   evidence is still in context.
 - **A plan or dossier carrying an open surprises/decisions section.** Search wherever this repository (or
-  workspace) keeps its plans for that heading, and read every one still open.
+  workspace) keeps its plans for that heading — for example `grep -l "Observation:" docs/plans/*.md`,
+  with your own heading and folder — and read every one still open.
 - **A repository closure that just ran.** A repository's own closure ceremony, if it has one, routes to
   *that repository's* surfaces, and its routing has no row for a fact spanning repositories — a
   repository's `AGENTS.md` must stand alone, so it may not name a sibling repository or the workspace
