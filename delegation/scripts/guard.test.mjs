@@ -39,6 +39,8 @@ const cases = [
   ["blind-run may not push", bash("git push", "delegation:blind-run"), 2],
   ["implementer may not commit", bash("git commit -m x", "delegation:implementer"), 2],
   ["implementer may write into a checkout", write("/work/repo/a.md", "delegation:implementer"), 0],
+  ["miner may not commit", bash("git commit -m x", "delegation:miner"), 2],
+  ["miner may read git", bash("git log --oneline -3", "delegation:miner"), 0],
 ]
 
 for (const [name, payload, expected] of cases) {

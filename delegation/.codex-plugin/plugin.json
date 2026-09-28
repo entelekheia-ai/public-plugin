@@ -9,6 +9,7 @@
   "skills": [
     "./skills/route-work",
     "./skills/hand-off",
-    "./skills/work-a-task"
+    "./skills/work-a-task",
+    "./skills/audit-delegations"
   ]
 }
