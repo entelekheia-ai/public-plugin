@@ -53,7 +53,11 @@ Also useful, not required: `claude plugin validate <path> --strict` on the catal
 List every candidate: skills (`**/SKILL.md`), subagent definitions, always-on rules. **Enumerate with a
 command, never from memory or a truncated listing** — `find <root> -name SKILL.md`, `ls -la` of each
 skill's folder — and keep the full file list of each item: its scripts, references and hooks travel with
-it. For each, one line: what it does, and the moment it fires.
+it. **A skill's folder is not its file list.** A private skill often calls a script that lives elsewhere
+in your setup — a shared `scripts/` folder, a tool in your home directory — so also search the item's text
+for every path it runs (`grep -oE '(scripts|bin|tools)/[^ )]+'`, and every command name you do not
+recognise as public) and add what it finds; a skill whose mechanism lives outside its folder is a pointer
+until those files move in with it. For each, one line: what it does, and the moment it fires.
 
 ## Step 2 — Compare each against what is already public
 
