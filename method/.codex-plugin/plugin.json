@@ -8,6 +8,7 @@
   },
   "skills": [
     "./skills/run-plan",
-    "./skills/route-learnings"
+    "./skills/route-learnings",
+    "./skills/authoring-rules"
   ]
 }

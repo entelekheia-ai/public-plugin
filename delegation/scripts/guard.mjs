@@ -2,8 +2,9 @@
 // guard.mjs — reads a PreToolUse payload on stdin and, when it comes from one of this plugin's
 // read-only agents, runs git-read-only.mjs on it in that agent's mode. Any other payload is allowed.
 //
-//   plan-scout, reviewer   git read-only subcommands only; Write/Edit only under a temporary directory
-//   blind-run, implementer git read-only subcommands only; each writes where its brief says
+//   plan-scout, reviewer, fact-sheet   git read-only subcommands only; Write/Edit only under a temporary
+//                                      directory
+//   blind-run, implementer             git read-only subcommands only; each writes where its brief says
 
 import { spawnSync } from "node:child_process"
 import { readFileSync } from "node:fs"
@@ -13,6 +14,7 @@ import { fileURLToPath } from "node:url"
 const MODES = {
   "delegation:plan-scout": ["--writes-under-tmp"],
   "delegation:reviewer": ["--writes-under-tmp"],
+  "delegation:fact-sheet": ["--writes-under-tmp"],
   "delegation:blind-run": [],
   "delegation:implementer": [],
 }
