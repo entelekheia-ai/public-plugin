@@ -36,8 +36,9 @@ sh ${CLAUDE_SKILL_DIR}/scripts/notes.sh block
 ```
 
 prints it: two sentences between two marker lines. Before running any skill, read its three notes files,
-most specific winning; after a run that taught something, append one dated line to the local one, create
-the folder if needed, and never edit a skill you do not own. The markers make installing twice a no-op and
+most specific winning, with `<skill>` the folder name without any `<plugin>:` prefix; after a run that
+taught something, append one dated line to the local one, creating the folder if needed; and never edit an
+installed copy of a skill, while a skill whose source the person keeps stays theirs to edit. The markers make installing twice a no-op and
 removing it exact.
 
 ## Step 1 — See where things stand
@@ -46,11 +47,14 @@ removing it exact.
 sh ${CLAUDE_SKILL_DIR}/scripts/notes.sh status [repo-dir]
 ```
 
-It lists the user-level instruction file of each agent that has one — Claude Code (`~/.claude/CLAUDE.md`),
+It lists the user-level instruction file of each agent that has one — Claude Code (`CLAUDE.md` in
+`CLAUDE_CONFIG_DIR`, default `~/.claude`),
 Codex CLI (`AGENTS.md` in `CODEX_HOME`, default `~/.codex`), Gemini CLI (`~/.gemini/GEMINI.md`), Copilot
 CLI (`copilot-instructions.md` in `COPILOT_HOME`, default `~/.copilot`) — with one state each: *folder
 absent* (that agent is not in use here), *no file yet*, *file present, no contract*, *contract current* or
-*contract present, older text*; and whether the repository has `.agents/skill-notes/` with `*.local.md`
+*contract present, older text*, or *markers damaged* (a begin marker without its end, two blocks, a
+marker inside a code block — the script refuses such a file and names the line, so fix it by hand); for
+Codex it also says when an `AGENTS.override.md` would be read instead; and whether the repository has `.agents/skill-notes/` with `*.local.md`
 ignored. In `audit` mode, report this and stop.
 
 ## Step 2 — Install the contract where the person agrees
@@ -65,10 +69,10 @@ sh ${CLAUDE_SKILL_DIR}/scripts/notes.sh install <file>
 
 It prints `added`, `updated` (an older copy of the block replaced) or `already current`, and refuses a file
 whose agent folder does not exist rather than creating it — an agent that is not installed does not need
-instructions. Two agents keep their user instructions in a settings field, not in a file: **Cursor**
-(Settings → Rules → User Rules) and **Copilot in VS Code** (a user instructions file VS Code creates from
-the Command Palette, "Chat: New Instructions File"). For either, print the block and tell the person where
-to paste it; do not look for a file to write.
+instructions. Two agents take their user instructions where no fixed path reaches: **Cursor** keeps them in a settings
+field (Settings → Rules → User Rules), and **Copilot in VS Code** in a user instructions file VS Code
+creates in the profile from the Command Palette ("Chat: New Instructions File"), under a name chosen then.
+For either, print the block and tell the person where to paste it; do not look for a file to write.
 
 The contract takes effect in the next session of each agent, since the instruction file is read at start.
 
@@ -97,7 +101,7 @@ anyone you share it with. Two edits, each with its exact text:
    replacement, and under its last line the few things a run of *that* skill is most likely to teach.
 
 Show both edits and apply them only after the person agrees. Where a subagent that applies a decided edit
-list exists (such as `publishing:edit-applier`), it can apply them; accept the result by diff.
+list exists (such as `publishing:edit-applier`), it can apply them and you accept the result by diff; otherwise apply them yourself.
 
 ## `propose <skill>` — send the notes back to whoever maintains the skill
 
