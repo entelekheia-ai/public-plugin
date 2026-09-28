@@ -1,0 +1,12 @@
+{
+  "name": "method",
+  "version": "0.1.0",
+  "description": "Carry a plan through its remaining tracks unattended, paced against the usage limit and the context window, with maintainer questions batched instead of asked one at a time.",
+  "author": {
+    "name": "Danilo Borges",
+    "url": "https://github.com/daniloborges"
+  },
+  "skills": [
+    "./skills/run-plan"
+  ]
+}

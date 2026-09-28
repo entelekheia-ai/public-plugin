@@ -2,7 +2,8 @@
   "name": "entelekheia-public-plugin",
   "private": true,
   "workspaces": [
-    "delegation"
+    "delegation",
+    "method"
   ],
   "scripts": {
     "version": "changeset version && node scripts/sync-versions.mjs"

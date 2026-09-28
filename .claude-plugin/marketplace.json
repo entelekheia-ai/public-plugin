@@ -23,6 +23,19 @@
       ]
     },
     {
+      "name": "method",
+      "source": "./method",
+      "description": "Carry a plan through its remaining tracks unattended, paced against the usage limit and the context window, with maintainer questions batched instead of asked one at a time.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": [
+        "plans",
+        "planning",
+        "pacing",
+        "workflow"
+      ]
+    },
+    {
       "name": "vibe-ops",
       "source": {
         "source": "git-subdir",

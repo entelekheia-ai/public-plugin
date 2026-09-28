@@ -1,0 +1,18 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+# PreCompact hook. While a plan run is in progress in this session, its stdout is
+# appended to the compaction instructions, so the summary keeps what the resume needs.
+# Exits 0 in every case: blocking an automatic compaction would let the context overflow.
+JQ=$(command -v jq || true)
+[ -n "$JQ" ] || exit 0
+sid=$("$JQ" -r '.session_id // empty' 2>/dev/null)
+state="$HOME/.claude/plan-runs/$sid.json"
+[ -n "$sid" ] && [ -f "$state" ] || exit 0
+cat <<EOF
+A plan run (the run-plan skill) is in progress (state file: $state). Preserve verbatim in the summary:
+the plan path, the repository and worktree, each finished track with its commit, the track in
+progress and how far it got, each parked track with its question, the path of every open task
+note or dossier, and — one line each — anything learned since the last time it was written down that
+has not been written down yet.
+EOF
+exit 0
