@@ -171,7 +171,8 @@ bash ${CLAUDE_SKILL_DIR}/scripts/finished-worktrees.sh <repo>
 ```
 
 It prints each worktree as `merged` (every commit is on the default branch already), `leftover` (a
-`worktree-agent-*` branch, or a detached HEAD, with nothing the default branch or a remote-tracking branch
+`worktree-agent-*` branch — the name Claude Code gives a subagent run with worktree isolation — or a
+detached HEAD, with nothing the default branch or a remote-tracking branch
 lacks), `detached-unpushed` (a detached HEAD holding a commit nothing else contains), `dirty` (uncommitted
 or untracked files), `unreadable` (`git status` itself failed there — a missing directory, a permissions
 problem) or `open` (still in flight), and removes nothing. **Only `merged` and `leftover` are ever safe to

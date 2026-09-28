@@ -40,7 +40,7 @@ The three are not the same job, and "done" means something different in each.
 
 | Trigger | What just happened | What this run owes |
 |---|---|---|
-| **A record closed** | a task dossier closed in a repository, a plan shipped, or cross-repo work ended with no repository to close in | Route what it taught. Steps 1–5. Demotion asked out loud. |
+| **A record closed** | a task record closed in a repository, a plan shipped, or cross-repo work ended with no repository to close in | Route what it taught. Steps 1–5. Demotion asked out loud. |
 | **Context is about to be lost** — the session is about to be compacted mid-flight, or `/route-learnings compact` | Nothing ended; the session is being truncated | The pre-compaction section below, **then** Steps 1–5. |
 | **The tier is over budget** | your own index says so, or enough has accumulated to review | [`references/consolidating-the-base.md`](references/consolidating-the-base.md), with convergence as the point — no harvest, no discharge; the demotion question still asked. |
 
@@ -84,7 +84,7 @@ is refused: the events that could carry it fire only where the work is already o
 a transcript re-read — it refills the context the compaction was performed to empty, and re-analyses
 material that was already analysed for free while the work was happening.
 
-Capture stays **attached to the work, while the work is happening**: a dossier's surprises section, or
+Capture stays **attached to the work, while the work is happening**: a task record's surprises section, or
 this skill at the end of a piece of cross-repo work. Worse at catching everything, better at everything
 else — the entry is written by whoever was surprised, with the evidence in hand.
 
@@ -94,7 +94,7 @@ Gather without judging; judgement is Steps 2 and 3. Draw from whichever apply:
 
 - **This session** — what was discovered that nobody knew at the start. The strongest source, because the
   evidence is still in context.
-- **A plan or dossier carrying an open surprises/decisions section.** Search wherever this repository (or
+- **A plan or task record carrying an open surprises/decisions section.** Search wherever this repository (or
   workspace) keeps its plans for that heading — for example `grep -l "Observation:" docs/plans/*.md`,
   with your own heading and folder — and read every one still open.
 - **A repository closure that just ran.** A repository's own closure ceremony, if it has one, routes to
@@ -397,11 +397,11 @@ fact and has no other way to reach it.
 **A fact routed to a skill is discharged against the skill**, with a plain path to its `SKILL.md`. That
 pointer is durable: a skill is permanent where an entry is deletable by design.
 
-**The source is already gone** whenever a dossier closure deleted it, which is the ordinary case after a
+**The source is already gone** whenever a task record's closure deleted it, which is the ordinary case after a
 repository's own closure ceremony. There is nothing to mark, and adding a marker to compensate helps
 nobody: the marker exists only to stop the next harvest promoting a duplicate, and a deleted source cannot
 be harvested again. Say the sources were closed out, and move on. **Check that the fact reached the
-harvest at all** — a dossier deleted before this skill ran took its entries with it, so the candidates come
+harvest at all** — a task record deleted before this skill ran took its entries with it, so the candidates come
 from the closure summary, the plan's retrospective and this session. Across sessions, whatever record the
 closure left of what it deleted — a commit, a breadcrumb of its own — is the only remaining source.
 
@@ -424,7 +424,7 @@ it when this run is the consolidate mode, or when a demotion turns out to affect
 ## Checklist
 
 - [ ] Which run this is was named out loud before starting, and every trigger that applied was named
-- [ ] If a plan or dossier is closing: its surprises/decisions section was read, and each routed entry in
+- [ ] If a plan or task record is closing: its surprises/decisions section was read, and each routed entry in
       it was marked
 - [ ] If pre-compaction: in-progress plans' progress, surprises and decisions brought current **before**
       compacting, and the successor's reading list named in chat, ordered, each with its reason — with the
