@@ -1,0 +1,13 @@
+{
+  "name": "machine",
+  "version": "0.1.0",
+  "description": "Keep a development machine working: reclaim disk by excluding regenerable caches from Time Machine and thinning the snapshots that pin them, and restore the VS Code agents panel when its model picker comes up empty.",
+  "author": {
+    "name": "Danilo Borges",
+    "url": "https://github.com/daniloborges"
+  },
+  "skills": [
+    "./skills/dev-storage",
+    "./skills/repair-agent-host"
+  ]
+}

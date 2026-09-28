@@ -4,7 +4,9 @@
   "workspaces": [
     "delegation",
     "method",
-    "publishing"
+    "publishing",
+    "machine",
+    "release"
   ],
   "scripts": {
     "version": "changeset version && node scripts/sync-versions.mjs"

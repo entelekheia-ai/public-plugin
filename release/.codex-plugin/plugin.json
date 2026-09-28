@@ -1,0 +1,14 @@
+{
+  "name": "release",
+  "version": "0.1.0",
+  "description": "Release channels for npm packages: adopt a stable and beta channel policy, promote beta to stable, and take a never-published repository to publishing itself from CI through npm trusted publishing.",
+  "author": {
+    "name": "Danilo Borges",
+    "url": "https://github.com/daniloborges"
+  },
+  "skills": [
+    "./skills/release-channels-adopt",
+    "./skills/release-promote",
+    "./skills/release-first-publish"
+  ]
+}

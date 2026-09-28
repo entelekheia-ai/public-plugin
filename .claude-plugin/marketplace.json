@@ -67,6 +67,32 @@
         "plan",
         "agents-md"
       ]
+    },
+    {
+      "name": "machine",
+      "source": "./machine",
+      "description": "Keep a development machine working: reclaim disk by excluding regenerable caches from Time Machine and thinning the snapshots that pin them, and restore the VS Code agents panel when its model picker comes up empty.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": [
+        "macos",
+        "disk",
+        "time-machine",
+        "vscode"
+      ]
+    },
+    {
+      "name": "release",
+      "source": "./release",
+      "description": "Release channels for npm packages: adopt a stable and beta channel policy, promote beta to stable, and take a never-published repository to publishing itself from CI through npm trusted publishing.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": [
+        "npm",
+        "release",
+        "changesets",
+        "trusted-publishing"
+      ]
     }
   ]
 }
