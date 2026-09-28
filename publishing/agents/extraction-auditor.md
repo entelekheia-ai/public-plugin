@@ -20,7 +20,7 @@ compare against. Read every listed file in full. Before you
 start, list each item's folder yourself (`ls -la`, `find`) and compare it with the list you were given: a
 file on disk that the brief did not name is your first finding — report it, and audit it too.
 
-## The four categories
+## The five categories
 
 Every hit carries `file:line` and the quoted text.
 
@@ -34,6 +34,12 @@ Every hit carries `file:line` and the quoted text.
   can go.
 - **D — overlap.** If the caller named a public equivalent, which part of the item it already covers, and
   the item's delta in one sentence. Do not search for equivalents the caller did not name.
+- **W — the author's own workflow.** Folder layout (`project/tasks/`, `docs/plans/`), record templates
+  and their section names, numbering schemes (`NNN-slug`, `Plan-012`), the author's own word for a common
+  thing (a "dossier" for a task, story or ticket), and the tool that writes them. None of it is private,
+  so a deny-list never catches it; report each with the role it stands for and a generic wording (the
+  role named, the author's layout as one example at most). A concept the item itself defines — a plan's
+  "tracks" in a skill about running plans — is the item's vocabulary, not the author's; do not report it.
 
 **A name is not private because it looks internal.** The caller may say which of their own public
 products may stay as a reference; follow that. When you cannot tell, list it as a question, not a hit.

@@ -1,6 +1,6 @@
 ---
 name: publish
-description: 'Take skills, subagents or rules you wrote for your own setup and make them publishable — inventory what you have, compare each against what is already public, audit each file for private data, internal dependencies and internal evidence, triage with you, generalize, verify mechanically and by a blind review, and release into a plugin catalog. Use when deciding which of your own skills or agents are worth sharing, when a private skill is about to become public, or "/publish <item or folder>".'
+description: 'Take skills, subagents or rules you wrote for your own setup and make them publishable — inventory what you have, compare each against what is already public, audit each file for private data, internal dependencies, internal evidence and the conventions of your own workflow, triage with you, generalize, verify mechanically and by a blind review, and release into a plugin catalog. Use when deciding which of your own skills or agents are worth sharing, when a private skill is about to become public, or "/publish <item or folder>".'
 argument-hint: '[item, folder or "inventory"]'
 user-invocable: true
 user_invocable: true
@@ -81,7 +81,7 @@ Give the `extraction-auditor` agent (this plugin ships it) each item's **complet
 what the agent cannot know on its own: the terms that are private to you (the categories of your
 deny-list, or the names themselves if you are comfortable passing them), the public equivalents Step 2
 found, and which of your own public products may stay as a reference. Or do the audit yourself with the
-same four categories. Every hit comes with `file:line` and the quoted text:
+same five categories. Every hit comes with `file:line` and the quoted text:
 
 - **A — private data.** Machine paths, usernames, email addresses, names of private repositories, internal
   project or plan numbers.
@@ -92,6 +92,13 @@ same four categories. Every hit comes with `file:line` and the quoted text:
   item whether it is load-bearing — the reason a rule exists — and keep it in abstract form ("measured
   once: …"), or remove it.
 - **D — overlap** with the public equivalent from Step 2, and the one-sentence delta.
+- **W — your own workflow.** Your folder layout (`project/tasks/`, `docs/plans/`), your record templates
+  and their section names, your numbering (`NNN-slug`, `Plan-012`), your own word for a common thing (a
+  "dossier" for what others call a task, story or ticket), and the tool that writes them. None of it is
+  private, so the deny-list never catches it, yet a reader who organises work differently must translate
+  every line. Keep the behaviour and name the role — "a task file: a task, story or ticket, wherever the
+  repository keeps them" — with your layout as one example at most, and your tool, if it is public, as an
+  optional backend.
 
 **The brief is the least-checked artifact in the whole flow.** If you hand the audit to an agent, list the
 files by command output, not by hand: a file missing from the brief is a file the audit never sees, and a
@@ -191,6 +198,8 @@ For a plugin that other harnesses should install too, add the manifest they read
 - [ ] The catalog failed on a deny-list term planted inside a dot-directory, and its deny-list loaded a
       non-zero count
 - [ ] Every item's file list came from a command, and the audit saw all of it
+- [ ] No published item speaks in your own workflow — its folder names, templates, section names or
+      numbering — where a role name would do (W)
 - [ ] Every item not published has its reason written down
 - [ ] Every published item works without the plugin's agents and hooks, or says what it loses
 - [ ] The files were staged before the gates ran
