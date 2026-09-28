@@ -62,17 +62,11 @@ esac
 tar -xzf "$work/sdk.tgz" -C "$work/$TARGET"
 rm -f "$work/sdk.tgz"
 
-# The empty .complete file is the only thing the agent host reads as a cache hit.
-: > "$work/$TARGET/.complete"
-
-mkdir -p "$cache/$version"
-rm -rf "$dest"
-mv "$work/$TARGET" "$dest"
-
-echo "installed $dest"
-
-# Prove the SDK resolves before handing it back — a directory of the right shape
-# that fails to load looks identical to a working one until a session starts.
+# Prove the SDK resolves before it is handed back as a cache hit — a directory of
+# the right shape that fails to load looks identical to a working one until a
+# session starts. Run the check against the work folder, before the move and
+# before the .complete marker is written, so a failed install cannot read as
+# valid on re-run.
 if [ "$agent" = "claude" ]; then
   node -e '
     const { createRequire } = require("module");
@@ -80,8 +74,18 @@ if [ "$agent" = "claude" ]; then
     const sdk = r("@anthropic-ai/claude-agent-sdk");
     if (typeof sdk.query !== "function") { throw new Error("claude-agent-sdk exports no query()"); }
     console.log("verified: @anthropic-ai/claude-agent-sdk loads and exports query()");
-  ' "$dest"
+  ' "$work/$TARGET"
 fi
+
+# The empty .complete file is the only thing the agent host reads as a cache hit.
+# Written only now, after whatever check above passed.
+: > "$work/$TARGET/.complete"
+
+mkdir -p "$cache/$version"
+rm -rf "$dest"
+mv "$work/$TARGET" "$dest"
+
+echo "installed $dest"
 
 echo
 echo "restart VS Code, then re-run sdk-status.sh and read the model count."

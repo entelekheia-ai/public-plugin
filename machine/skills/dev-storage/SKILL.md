@@ -21,9 +21,13 @@ Free disk on a dev machine, and stop it filling again. Everything this touches i
 the tool that owns it** — package caches, compiler output, downloaded SDKs. Source and `.git` are
 never touched.
 
+**This skill's delta is Time Machine exclusion of regenerable development output and snapshot
+thinning, on a cadence — not disk cleanup in general.** For everything else (browser caches, system
+junk, application leftovers unrelated to development), use a general-purpose macOS cleanup skill.
+
 **This is a target-state skill.** The disk has a correct shape — regenerable caches gone, Time
 Machine exclusions in place, local snapshots thinned — and every subcommand converges toward it:
-`exclude` is stated idempotent above, and re-running `reclaim` after nothing new has accumulated
+`exclude` is stated idempotent below, and re-running `reclaim` after nothing new has accumulated
 simply finds nothing left to delete. `report` is this skill's survey-without-writing mode, not a
 separate skill.
 
@@ -62,9 +66,38 @@ source-side sections; `tm-report.sh`/`tm-inventory.sh` need `sudo` only to read 
 sections, and those additionally need Full Disk Access granted to the terminal — see
 [the reference](references/scripts.md) for the split.
 
+```sh
+sudo ${CLAUDE_SKILL_DIR}/scripts/tm-report.sh [output-file]      # what Time Machine is still carrying
+sudo ${CLAUDE_SKILL_DIR}/scripts/tm-inventory.sh [output-file]   # what regenerable junk is already inside a backup
+```
+
 `DEV_ROOT` overrides the scan root; it has no assumed value beyond the example default
 `~/Development` the script ships with — set it to wherever your own projects actually live before
-running anything. Start with `report` and show the user the top consumers before deleting anything.
+running anything.
+
+**`report` is always the first step, never `reclaim` or `exclude` directly.** It is a preview, not
+just a survey: alongside the top consumers, it prints the exact build directories `exclude` would add
+and the ones `reclaim --deep` would remove for being stale. Show that output to the user before
+running either command — a plain `reclaim` must never delete a cache the user has not seen named
+first.
+
+## Tuning the lists without editing the installed copy
+
+The defaults in `GLOBAL_CACHES` and `BUILD_DIRS` are a starting point, not a claim that they cover
+this machine. Add or remove a path through `~/.config/dev-storage/config` (or `$DEV_STORAGE_CONFIG`
+for a different file), `KEY=value` per line:
+
+```text
+DEV_STORAGE_EXTRA=/path/to/a/cache/this/machine/has
+DEV_STORAGE_EXTRA=some-build-dir-name
+DEV_STORAGE_SKIP=/path/to/leave/alone
+DEV_STORAGE_SKIP=coverage
+```
+
+A value containing `/` is treated as a full cache path (added to or removed from `GLOBAL_CACHES`); a
+bare value is treated as a build-directory name (added to or removed from `BUILD_DIRS`, still subject
+to the git-ignore check below). `DEV_STORAGE_EXTRA`/`DEV_STORAGE_SKIP` are read the same way from the
+environment, and either source may repeat the key for more than one entry.
 
 ## Judgment the script deliberately leaves to you
 
@@ -73,7 +106,8 @@ they are decisions, not chores:
 
 - **Stale build directories** are listed, not deleted, unless `--deep`. "Untouched for 60 days"
   cannot distinguish an abandoned experiment from a release branch not checked out this quarter —
-  read the list aloud to the user first.
+  `report` prints this same list (and the paths `exclude` would add) before anything runs; read that
+  output aloud to the user first, every time, not just once.
 - **Application data, media, cloud placeholders, `~/Downloads`.** `report` will show them when they
   are large. They are the user's files: surface the number, propose nothing, delete nothing.
 - **Anything outside the regenerable set.** If you are reaching for a path the script does not
@@ -103,16 +137,11 @@ One in two, once measured. That is a good enough hit rate to never skip it.
 ## The biggest offender is rarely called a cache
 
 Searching for directories named `cache` finds the easy half. The expensive half is **large mutable
-state an application keeps under `Application Support`** — nothing in the name says "disposable",
-and Time Machine copies the whole thing every time a byte changes.
-
-The case that proved it once: a VM-bundle folder under `Application Support` held a multi-gigabyte
-sparse disk image that mutated on every agent run, and it was `[Included]` in Time Machine. A sparse
-image also **never shrinks**: deleting files inside the guest frees nothing on the host, so the
-durable fix is resetting the image, not cleaning within it.
-
-So when `report` shows something large that the exclusion list does not cover, ask what *writes* to
-it and how often — not whether its name sounds temporary.
+state an application keeps under `Application Support`** — nothing in the name says "disposable", and
+Time Machine copies the whole thing every time a byte changes (a mutating sparse disk image is the
+sharpest case: it never shrinks from cleaning inside it, only from being excluded or reset). When
+`report` shows something large that the exclusion list does not cover, ask what *writes* to it and how
+often — not whether its name sounds temporary.
 
 ## An exclusion is forward-only
 
@@ -152,11 +181,10 @@ Two things to state correctly when this comes up:
 
 ## Package managers move install speed, not disk space
 
-When the disk is full, migrating npm → pnpm/bun will be proposed. Measured once: thousands of
-installed packages across dozens of projects carried well under a third of their weight as
-duplication recoverable by a hardlinked store — a small fraction of what snapshot thinning returned.
-Migrate for install speed or for strictness if you want, but do not sell it as a disk fix, and do not
-let it delay `reclaim`.
+Migrating npm → pnpm/bun is a plausible-sounding response to a full disk, and it is the wrong lever:
+the duplication a hardlinked store recovers is a small fraction of what `reclaim` returns by thinning
+snapshots. Migrate for install speed if you want it, but do not let it delay `reclaim`, and do not
+count it as a disk fix.
 
 One real cost worth naming: **bun's cache has no prune command and only grows.** Measured once, it
 reached several gigabytes on a machine where every repository resolved through
@@ -171,14 +199,14 @@ little, while the top of the churn list sits nowhere near the top of the size li
 
 Reading it correctly means knowing what each column already accounts for:
 
-- **`TAMANHO` is gross, `MUDOU` is net.** The size is the whole subtree including children that are
+- **`SIZE` is gross, `CHANGED` is net.** The size is the whole subtree including children that are
   already excluded; the churn has those pruned out. A row can look enormous and be nearly free
   precisely because the expensive part of it is already excluded.
-- **`MUDOU = ?` means unmeasured.** That walk hit `SIZE_TIMEOUT` and was abandoned, so the true number
+- **`CHANGED = ?` means unmeasured.** That walk hit `SIZE_TIMEOUT` and was abandoned, so the true number
   stays unknown — treat it as neither zero nor small. Those rows sort to the top on purpose. Re-run with
   a larger `SIZE_TIMEOUT` rather than concluding anything from them.
 - **Churn can exceed size.** Normal, and informative: it means files were rewritten more than once in
-  the window. Combined with a low `ARQ` it identifies a big archive being replaced wholesale, which
+  the window. Combined with a low `FILES` count it identifies a big archive being replaced wholesale, which
   is the expensive case — block-level delta copying does not save you when the whole file is rewritten.
 
 **Every zero in a storage script deserves one spot check before it is believed.** Four separate bugs
@@ -204,15 +232,18 @@ Then ask the user whether a note should go back into the skill itself, through t
 
 What is worth noting, in this skill:
 
-- `GLOBAL_CACHES` in the script is a list, and a list is a claim that it is complete. It never is —
-  **the edits worth making are the paths that list missed.** Every new tool installed on a machine
-  arrives with storage nobody chose, and it will not be named `cache`. This skill has already been
-  wrong once in exactly that way: the VM bundle was the single largest unexcluded consumer and was
-  absent from the list until `report` surfaced it. When that happens, add the path *and* say what
-  class of thing it was, so the next gap is recognized before it costs gigabytes.
-- The opposite failure is worse and quieter: **a path added to the list that was not actually
-  regenerable.** Nothing complains, the backup simply stops covering something that mattered, and it
-  is discovered only when it is needed. Before extending the list, name the process that rebuilds
+- The scripts' own `GLOBAL_CACHES`/`BUILD_DIRS`/`CANDIDATES` lists are a claim of completeness, and
+  never edited directly — they are installed copies. **The edits worth making go into the config
+  file**, `~/.config/dev-storage/config` (or `$DEV_STORAGE_CONFIG`): `DEV_STORAGE_EXTRA=<path or
+  build-dir name>` per line to add, `DEV_STORAGE_SKIP=<path or name>` per line to leave alone. Every
+  new tool installed on a machine arrives with storage nobody chose, and it will not be named `cache`.
+  This skill has already been wrong once in exactly that way: the VM bundle was the single largest
+  unexcluded consumer and was absent from the defaults until `report` surfaced it. When that happens,
+  add the path to the config *and* say what class of thing it was, so the next gap is recognized
+  before it costs gigabytes.
+- The opposite failure is worse and quieter: **a path added that was not actually regenerable.**
+  Nothing complains, the backup simply stops covering something that mattered, and it is discovered
+  only when it is needed. Before adding a path to `DEV_STORAGE_EXTRA`, name the process that rebuilds
   that directory unasked. If you cannot name it, it does not belong there — propose it to the user
   instead.
 - A run that produces a figure contradicting one already written into this skill or its reference is
@@ -220,7 +251,8 @@ What is worth noting, in this skill:
   will eventually aim someone at the wrong lever.
 - A gap that recurs across machines rather than on one is a workspace fact, not a skill fix — route it
   with `/route-learnings` instead of growing this file.
-- **A fix made in one script's list is usually needed in the other's**, and the second half is what gets
-  forgotten. When a run adds a path anywhere, check both `GLOBAL_CACHES`/`BUILD_DIRS` in
-  `dev-storage.sh` and `CANDIDATES` in `tm-inventory.sh` before closing.
+- **A path added to the config is read by `dev-storage.sh`; `tm-inventory.sh`'s own `CANDIDATES`
+  list is separate and installed, not configurable the same way.** When a run adds a path to
+  `DEV_STORAGE_EXTRA`, check whether `tm-inventory.sh`'s report should have found it too before
+  closing — that gap is worth an upstream edit, since its list has no config-file override yet.
 - If a run needed no edits, say so — a sweep where the list already covered everything is signal too.

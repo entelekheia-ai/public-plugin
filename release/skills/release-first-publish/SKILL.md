@@ -38,17 +38,17 @@ Step 2 is a one-shot act nested inside an otherwise repeatable procedure.
 > states a mechanism it inferred from a symptom. Pay the closing **note what this run taught** clause
 > every time.
 
-## Step 0 — The six preconditions npm never checks
+## Step 0 — The seven preconditions npm never checks
 
 npm validates none of these when you save a trusted publisher, and the errors they produce name none of
-them. Check all six before writing anything; each one is a run that fails for a reason you will not find
+them. Check all seven before writing anything; each one is a run that fails for a reason you will not find
 by reading the failure.
 
 | # | Precondition | How to check | If it fails |
 |---|---|---|---|
-| 1 | **The repository is public** | `gh repo view <owner>/<repo> --json visibility` | A private repo answers `E403 OIDC permission denied for this action` no matter how right everything else is — every claim matching the trusted publisher, Node 24, `registry-url` set — and the message names neither visibility nor a claim, so the search goes to the publisher form, Node and `.npmrc` instead. Make it public, or publish with a granular npm token stored as the `NPM_TOKEN` secret (which `changesets/action` picks up) and stop here. |
-| 2 | **Every package declares `repository.url` matching the GitHub repo** | `--json` output of `publish-order.mjs`, or read the manifests | npm refuses the OIDC publish. This is the most common cause of the "404 that lies". |
-| 3 | **No dependency cycle among the packages** | `node publish-order.mjs <repo>` | Every order publishes one member before its dependency, so that member sits on npm un-installable until the cycle's last package lands. Workspaces hide this by symlink through every local build and test. Break each cycle **in code** — extract the shared piece, or move the weaker edge to a dynamic load. |
+| 1 | **The repository is public** | `gh repo view <owner>/<repo> --json visibility` | A private repo answers `E403 OIDC permission denied for this action` no matter how right everything else is — every claim matching the trusted publisher, Node 24, `registry-url` set — and the message names neither visibility nor a claim, so the search goes to the publisher form, Node and `.npmrc` instead. Make it public, or publish with a granular npm token stored as an `NPM_TOKEN` secret and read by the workflow (Step 4 shows both the changesets and the by-hand shape) and stop here. |
+| 2 | **Every package declares `repository.url` matching the GitHub repo** | `publish-order.mjs --json` (each record's `repository` field), or read the manifests | npm refuses the OIDC publish. This is the most common cause of the "404 that lies". |
+| 3 | **No dependency cycle among the packages** | `node ${CLAUDE_SKILL_DIR}/publish-order.mjs <repo>` | Every order publishes one member before its dependency, so that member sits on npm un-installable until the cycle's last package lands. Workspaces hide this by symlink through every local build and test. Break each cycle **in code** — extract the shared piece, or move the weaker edge to a dynamic load. |
 | 4 | **The scope exists and you can publish to it** | `npm org ls <scope>` or `npm access list packages <scope>` | A scope you do not own fails at the first publish, after you have already versioned everything. |
 | 5 | **Node ≥ 22.14 and npm ≥ 11.5.1**, in CI *and* at your terminal | `node -v && npm -v` | Below either, the OIDC exchange never happens and npm reports a 404. Pin `node-version: '24'` in the workflow. |
 | 6 | **The debut version is decided** | ask | `0.0.1` placeholders that were never published are not a version choice. Decide before publishing; a published version cannot be recalled. |
@@ -99,10 +99,46 @@ npm run build && npm test       # the debut passes the same gates every later re
 
 # The order is not alphabetical and not the workspace order. npm publish validates nothing about
 # dependencies — it is the window between publishes that must stay installable, for consumers and
-# for this workflow's own next `npm ci`.
-node <skill-dir>/publish-order.mjs . --paths | while read -r dir; do
-  ( cd "$dir" && npm publish --access public ) || break
-done
+# for this workflow's own next `npm ci`. Before publishing a package, wait for every package it needs to
+# answer on the registry: a publish seconds apart can still land before the previous one's packument has
+# propagated, and `npm install` of the dependent fails in that window. E403 "cannot publish over the
+# previously published version" is a resume, not a failure — the loop keeps going. Any other error stops
+# the loop and the whole run exits non-zero, so a partial debut is never mistaken for a clean one.
+set -o pipefail
+node ${CLAUDE_SKILL_DIR}/publish-order.mjs . --json | node -e '
+  const { execFileSync } = require("node:child_process");
+  const pkgs = JSON.parse(require("fs").readFileSync(0, "utf8"));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function waitFor(name, version) {
+    for (let i = 0; i < 18; i++) {                          // ~3 minutes, 10s apart
+      try { execFileSync("npm", ["view", `${name}@${version}`, "version"], { stdio: "pipe" }); return; }
+      catch { await sleep(10000); }
+    }
+    throw new Error(`${name}@${version} never answered on the registry — publish may not have propagated`);
+  }
+  (async () => {
+    for (const p of pkgs) {
+      for (const dep of p.needs) {
+        const d = pkgs.find((x) => x.name === dep);
+        await waitFor(d.name, d.version);
+      }
+      try {
+        const out = execFileSync("npm", ["publish", "--access", "public"], { cwd: p.dir, stdio: "pipe" });
+        process.stdout.write(out);
+      } catch (e) {
+        const out = `${e.stdout ?? ""}${e.stderr ?? ""}`;
+        process.stderr.write(out);
+        if (/cannot publish over( the)? previously published version/i.test(out)) {
+          console.error(`${p.name}@${p.version} already published — resuming`);
+          continue;
+        }
+        console.error(`${p.name}@${p.version} failed to publish — stopping`);
+        process.exitCode = 1;
+        return;
+      }
+    }
+  })();
+'
 ```
 
 `--access public` is required on the first publish of a **scoped** package; without it npm defaults to
@@ -126,11 +162,11 @@ refused with `E403 … Permission permission_denied: The requested installation 
 right token and `packages: write` granted. The message reads as an auth problem; the fix
 is a different package name for every consumer, so compare scope and owner before choosing it.
 
-**A partial failure is normal and safe to resume.** The loop stops at the first failure; the packages
-already published stay published. Fix the cause, re-run the loop — `npm publish` on a version that
-already exists fails with `E403 cannot publish over previously published version`, which is the loop
-skipping what is done, not a new problem. Never bump a version to get past it: that publishes a version
-whose content nobody reviewed.
+**A partial failure is normal and safe to resume.** The loop already treats a republish of a version that
+exists (`E403 cannot publish over previously published version`) as done, not a failure, and keeps going;
+it stops, and exits non-zero, only on a different error. Fix the cause of that error and re-run the loop
+from the top — the packages already published stay published, and the resumed run skips straight past
+them. Never bump a version to get past a failure: that publishes a version whose content nobody reviewed.
 
 Verify before moving on, rather than reading the loop's output. **Check the packument, not only the
 version document** — the two propagate separately. For several minutes after a publish,
@@ -144,7 +180,7 @@ that follows dies on the sibling and the retry minutes later succeeds with nothi
 one of N is not a reading of N; the loop below is cheap, so run the whole list:
 
 ```sh
-node <skill-dir>/publish-order.mjs . --json \
+node ${CLAUDE_SKILL_DIR}/publish-order.mjs . --json \
   | node -e 'const p=JSON.parse(require("fs").readFileSync(0));(async()=>{for(const{name,version}of p){
       const v=await fetch(`https://registry.npmjs.org/${name}/${version}`);
       const k=await fetch(`https://registry.npmjs.org/${name}`);
@@ -181,7 +217,7 @@ Four fields decide the declaration, and none is validated against reality on sav
 | Field | Flag | The trap |
 |---|---|---|
 | Organization and repository | `--repo <owner>/<repo>` | the GitHub owner, not the npm scope — they differ more often than not |
-| Workflow filename | `--file release.yml` | **filename only**, with the extension, no `.github/workflows/` path. The file must already exist on the default branch. |
+| Workflow filename | `--file release.yml` | **filename only**, with the extension, no `.github/workflows/` path. The file must already exist on the default branch — if it does not yet, write it from [Step 4](#step-4--the-release-workflow) and commit it to the default branch first, then come back and run this command. |
 | Environment | `--env` | omit it. Pass it **only** if the job declares `environment:`; a value the job does not carry fails every run. |
 | Allowed actions | `--allow-publish` | **without this flag the connection permits only `npm stage publish`**, and a workflow running plain `npm publish` — the shape in Step 4 — is refused by a declaration that reads as correct. Omit it deliberately if the repo wants staged publishing, which is the stronger posture (a maintainer approves each release with 2FA) at the cost of a manual step per release, and change the workflow to match. |
 
@@ -211,10 +247,13 @@ not implement it.
 ## Step 4 — The release workflow
 
 **Read [`references/release-workflow.md`](references/release-workflow.md) now, and write the repository's
-`release.yml` from it.** It holds the workflow's shape and the five things that shape gets right against
-the npm docs. It also holds the two traps in deriving "did this run release": poll npm rather than asking
-once, and read the version from `$GITHUB_SHA`, only when no changeset is pending. Name the file what the
-trusted publisher declared in Step 3, and point `publish:` at the dependency-order loop from Step 2.
+`release.yml` from it.** It holds two workflow shapes — one built on `changesets/action`, one by hand for
+a repo that versions by hand (Step 1's other branch) — and the five things the changesets shape gets right
+against the npm docs. It also holds the two traps in deriving "did this run release": poll npm rather than
+asking once, and read the version from `$GITHUB_SHA`, only when no changeset is pending (the by-hand shape
+has no such state to poll for — it releases the tag it was triggered on). Name the file what the trusted
+publisher declared in Step 3, and point `publish:` (or the by-hand workflow's own publish step) at the
+dependency-order loop from Step 2.
 
 Once a release has gone through green, read every registry the workflow publishes to, as the reference's
 last section shows. Then revoke any publish token the repo used to have.
@@ -228,7 +267,7 @@ last section shows. Then revoke any publish token the repo used to have.
 - [ ] One real release has run green through the workflow, **and every registry it publishes to answers that version, with the `v<version>` tag present**. A green run can still be a partial release. **Until both have happened, the setup is written, not working** — say exactly that rather than reporting the pipeline as done.
 - [ ] Any pre-existing publish token is revoked, and no `NPM_TOKEN` secret remains referenced.
 - [ ] The target repo's `AGENTS.md` names how it releases now.
-- [ ] Every claim this run corrected was rewritten in the step it governs, with no dated entry beside it.
+- [ ] Every claim this run corrected was written to the notes file, with the step it governs named, not edited into this file.
 
 ## ⟳ After every use: note what this run taught
 
@@ -267,8 +306,8 @@ What is worth noting, in this skill:
 - **Resuming a partial debut publish** (Step 2) has never been exercised on a run that actually died
   mid-list — note the first time it is, and whether the loop actually resumes cleanly.
 - A fact about npm or GitHub Actions that any repo publishing there would hit, not just the one this run
-  targeted, is worth routing past this skill's own notes file to wherever this workspace keeps cross-repo
-  facts.
+  targeted, is worth routing past this skill's own notes file to wherever you keep facts that span
+  repositories.
 
 If a use produced no edits and no note, say so in the session — that is signal too.
 

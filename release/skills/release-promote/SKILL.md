@@ -1,6 +1,6 @@
 ---
 name: release-promote
-description: Run the beta→stable promotion ceremony for a repo on the workspace channel policy — preconditions (forward-port ancestry, canaries green against @beta), the promotion PR, pre-mode exit, and post-promotion re-entry. Use when the maintainer decides a milestone means the accumulated beta channel should become the next stable release. Not for fixes — patches go straight to stable by policy.
+description: Run the beta→stable promotion ceremony for a repo on the stable+beta channel policy — preconditions (forward-port ancestry, canaries green against @beta), the promotion PR, pre-mode exit, and post-promotion re-entry. Use when the maintainer decides a milestone means the accumulated beta channel should become the next stable release. Not for fixes — patches go straight to stable by policy.
 argument-hint: "<repo-path>"
 user-invocable: true
 user_invocable: true
@@ -55,9 +55,10 @@ npx changeset pre exit          # removes .changeset/pre.json
 npx changeset version           # consumes changesets → final (non -beta.N) versions + changelogs
 ```
 
-Then run the repo's version-sync steps (whatever its adopt-time `version-script` does: Cargo.toml,
-committed generated version constants, lockfile) and its build + full test suite locally. Never tag past
-red — a failing or *hanging* test is a stop, not a formality.
+Then run whatever syncs versions living outside `package.json` (Cargo.toml, committed generated version
+constants, the lockfile — the version-sync step `release:release-channels-adopt`'s Stage C installs, if it
+is) and the repo's build + full test suite locally. Never tag past red — a failing or *hanging* test is a
+stop, not a formality.
 
 ## Step 2 — The promotion PR
 
@@ -72,8 +73,9 @@ The maintainer merges it. Nobody else, nothing automatic.
 
 ## Step 3 — Release and re-arm
 
-1. The merge to `main` drives the repo's stable release flow (Version PR / waves publish — whatever
-   Stage C of adoption installed; if the repo is still on manual publishing, run its runbook now).
+1. The merge to `main` drives the repo's stable release flow: the Version Packages PR, or your own
+   dependency-ordered publish procedure — whatever Stage C of adoption installed; if the repo is still on
+   manual publishing, run it now.
 2. Verify: registry shows the new versions on the stable dist-tag; provenance attestations present;
    GitHub Release has real presentation copy in English, not a raw changelog dump.
 3. **Re-arm the beta channel:** merge `main` back into `beta`, then on `beta`

@@ -20,9 +20,9 @@ of this procedure the picker offers models again and the credential billing them
 
 **`install-sdk.sh` writes into VS Code's own SDK cache** — application state under the user-data
 directory (`agent-host/sdk-cache/<agent>/<version>/<sdkTarget>/`), the same place VS Code's own in-app
-download writes. It never touches the app's `product.json` or settings. To undo it, delete the version
-directory it created (`rm -rf` the path the script printed as `installed …`); VS Code re-downloads it
-itself the next time a session needs it, or the script can be re-run.
+download writes. It never touches the app's `product.json` or settings. To undo it, delete the printed
+directory (`rm -rf` the path the script printed as `installed …`), then its parent version directory
+if empty; VS Code re-downloads it itself the next time a session needs it, or the script can be re-run.
 
 **This is a target-state skill.** The correct shape is the cache holding the pinned version plus the
 credential the panel is supposed to bill; a second run repairs whatever drifted. Pass `audit` to run

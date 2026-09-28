@@ -86,7 +86,7 @@ phase() {
 # is exactly how this script was first reported as broken while `tmutil compare`
 # sat blocked on I/O for eleven minutes. Always show the clock moving.
 # Width comes from the terminal, not from a guess. A fixed 46 columns truncated
-# the useful half of the message ("...bloqueado e") on a wide window while wasting
+# the useful half of the message ("...blocked and") on a wide window while wasting
 # nothing on a narrow one.
 COLS=${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}
 BW=$((COLS - 14))
@@ -134,29 +134,29 @@ blocked() { grep -qi 'full disk access\|operation not permitted' "$1" 2>/dev/nul
 say "Time Machine / storage report"
 say "host $(hostname -s)   user $REAL_USER   $(date)"
 say "running as $(id -un)$([ -n "${SUDO_USER:-}" ] && echo ' (via sudo)')"
-say "cores $NCPU   limite ${MIN_MB}MB   janela ${DAYS}d"
+say "cores $NCPU   threshold ${MIN_MB}MB   window ${DAYS}d"
 
 # --- 1. context ----------------------------------------------------------------
-phase "Contexto do disco e do Time Machine"
-rule "Disco"
+phase "Disk and Time Machine context"
+rule "Disk"
 df -h / /System/Volumes/Data 2>/dev/null >>"$DRAFT"
-rule "Destino do backup"
+rule "Backup destination"
 tmutil destinationinfo >>"$DRAFT" 2>&1
 say ""
 tmutil status 2>/dev/null | sed -n '1,8p' >>"$DRAFT"
 say "AutoBackup: $(defaults read /Library/Preferences/com.apple.TimeMachine.plist AutoBackup 2>/dev/null || echo '?')"
 SNAPS=$(tmutil listlocalsnapshots / 2>/dev/null | grep -c local)
-rule "Snapshots locais"
-say "quantidade: $SNAPS"
-say "(cada um segura os blocos de tudo que foi apagado depois dele;"
-say " 'dev-storage.sh reclaim' termina afinando-os)"
-note "destino: $(tmutil destinationinfo 2>/dev/null | awk -F': ' '/Mount Point/{print $2; exit}')"
-note "snapshots locais: $SNAPS"
+rule "Local snapshots"
+say "count: $SNAPS"
+say "(each one holds the blocks of everything deleted after it;"
+say " 'dev-storage.sh reclaim' ends by thinning them)"
+note "destination: $(tmutil destinationinfo 2>/dev/null | awk -F': ' '/Mount Point/{print $2; exit}')"
+note "local snapshots: $SNAPS"
 
 # --- 2. backup side, launched in the background --------------------------------
 # The slowest step and independent of everything else, so it runs while phases
 # 3-5 do their work. Collected in phase 6.
-phase "Lado do backup (em segundo plano)"
+phase "Backup side (in the background)"
 (
 	tmutil listbackups >"$TMPD/backups" 2>&1
 	if ! blocked "$TMPD/backups" && [ "$SKIP_COMPARE" != 1 ]; then
@@ -167,13 +167,13 @@ phase "Lado do backup (em segundo plano)"
 	: >"$TMPD/backup.done"
 ) &
 BG=$!
-note "listbackups + compare disparados (pid $BG)"
+note "listbackups + compare launched (pid $BG)"
 if [ "$SKIP_COMPARE" = 1 ]; then
-	note "compare desativado (SKIP_COMPARE=1)"
+	note "compare disabled (SKIP_COMPARE=1)"
 else
-	note "'tmutil compare' varre o volume inteiro contra o ultimo backup:"
-	note "leva minutos e fica bloqueado em I/O, com quase zero CPU."
-	note "limite ${COMPARE_TIMEOUT}s (COMPARE_TIMEOUT=), ou SKIP_COMPARE=1 para pular."
+	note "'tmutil compare' scans the whole volume against the last backup:"
+	note "takes minutes and blocks on I/O, with near-zero CPU."
+	note "limit ${COMPARE_TIMEOUT}s (COMPARE_TIMEOUT=), or SKIP_COMPARE=1 to skip."
 fi
 
 # --- 3. exclusions, from both mechanisms ----------------------------------------
@@ -191,7 +191,7 @@ fi
 # right tool — but it took 45 seconds for a single path on this machine, which is
 # what made the first version of this script appear to hang. Reading the xattr
 # directly costs ~1.4ms, so the two sources are read here and joined below.
-phase "Exclusoes ativas (xattr + SkipPaths)"
+phase "Active exclusions (xattr + SkipPaths)"
 defaults read /Library/Preferences/com.apple.TimeMachine.plist SkipPaths 2>/dev/null |
 	sed -n 's/^ *"\{0,1\}\(\/[^",]*\)"\{0,1\},\{0,1\} *$/\1/p' | sort >"$TMPD/skip"
 NSKIP=$(grep -c . "$TMPD/skip" 2>/dev/null || echo 0)
@@ -200,11 +200,11 @@ NSKIP=$(grep -c . "$TMPD/skip" 2>/dev/null || echo 0)
 # the wrong instrument twice over: it holds no dotfiles at all, and on this
 # machine it reports nothing under ~/Library either — which is precisely where
 # the exclusions live. Batched with `-exec … {} +`, testing every directory costs
-# seconds and finds 316 exclusions where `mdfind` finds none.
+# seconds and finds hundreds of exclusions where `mdfind` finds none.
 #
 # Five levels, not three. The exclusions this policy sets are that deep —
 # `Library/Application Support/Claude/vm_bundles` is four — and a depth-3 scan
-# missed it, so 6.9 GB of excluded VM image was charged to its parents' churn.
+# missed it, so several GB of excluded VM image was charged to its parents' churn.
 # Depth 3 costs 2s and depth 5 costs 7s against a run measured in minutes; the
 # shallow version was a false economy. Anything deeper than this is still missed,
 # which affects only how churn is attributed: the candidate list itself is
@@ -226,7 +226,8 @@ note "SkipPaths: $NSKIP   xattr: $NEXCL"
 
 # excluded <path> — true when the path or any ancestor carries the exclude xattr,
 # OR sits at/under a SkipPaths entry. Both mechanisms, or the answer is wrong for
-# whichever one it omits: ~/.omlx here is 104 GB excluded solely via SkipPaths.
+# whichever one it omits: a path excluded solely via SkipPaths would otherwise
+# read as unprotected.
 # Authoritative and local — no daemon, ~1.4ms, against 45s for tmutil isexcluded.
 excluded() {
 	p=$1
@@ -239,10 +240,11 @@ excluded() {
 }
 
 # --- 4. sizes, fanned out across cores ------------------------------------------
-phase "Tamanhos por pasta ($NCPU cores em paralelo)"
+phase "Sizes by folder ($NCPU cores in parallel)"
 
 # Skip what is already excluded before walking it. These can never reach the
-# candidate list, and one of them here is 104 GB — the walk was pure cost.
+# candidate list, and one of them here has been a very large directory — the
+# walk was pure cost.
 SKIPPED=0
 : >"$TMPD/tops"
 find "$H" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort | while IFS= read -r d; do
@@ -254,7 +256,7 @@ find "$H" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort | while IFS= read -
 done
 SKIPPED=$(grep -c . "$TMPD/tops.skipped" 2>/dev/null || echo 0)
 NTOP=$(grep -c . "$TMPD/tops" 2>/dev/null || echo 0)
-note "$NTOP a medir, $SKIPPED ja excluidas (nao serao percorridas)"
+note "$NTOP to measure, $SKIPPED already excluded (will not be walked)"
 
 # Track our own PIDs. A bare `wait` waits for EVERY background child, and this
 # script has one that outlives the phase: the tmutil compare from phase 2. That
@@ -302,7 +304,7 @@ while IFS= read -r d; do
 	# Excluded subtrees are pruned out of the churn walk. Top-level directories
 	# already excluded never get here at all, but their *children* do, and those
 	# dominate: ~/Library is not excluded while ~/Library/Caches is, and that one
-	# child alone held 8730 of the changed files in a seven-day window. Counting
+	# child alone held thousands of the changed files in a seven-day window. Counting
 	# them would rank a directory by bytes the backup is not paying for. It was
 	# also most of the walk — unpruned, ~/Library ran past a 900s ceiling and was
 	# killed. du keeps the whole subtree (it has no prune, and the size column is
@@ -322,7 +324,7 @@ while IFS= read -r d; do
 	) &
 	PIDS="$PIDS $!"
 	printf '%s\t%s\t%s\n' "$!" "$(basename "$d")" "$d" >>"$TMPD/pidmap"
-	beat "despachando $i/$NTOP  $(basename "$d")"
+	beat "dispatching $i/$NTOP  $(basename "$d")"
 	while [ "$(alive)" -ge "$NCPU" ]; do sleep 0.2; done
 done <"$TMPD/tops"
 
@@ -339,15 +341,15 @@ while [ "$(alive)" -gt 0 ]; do
 			awk -F'\t' -v pid="$p" '$1 == pid {print $3; exit}' "$TMPD/pidmap"
 		done >>"$TMPD/abandoned"
 		for p in $PIDS; do kill "$p" 2>/dev/null; done
-		note "abandonadas apos ${SIZE_TIMEOUT}s: $(tr '\n' ' ' <"$TMPD/abandoned")"
+		note "abandoned after ${SIZE_TIMEOUT}s: $(tr '\n' ' ' <"$TMPD/abandoned")"
 		break
 	fi
-	beat "medindo — faltam $(alive) de $NTOP: $(lagging) (${w}s)"
+	beat "measuring — $(alive) of $NTOP left: $(lagging) (${w}s)"
 	sleep 1
 done
 cat "$TMPD"/sz.* 2>/dev/null | awk -v m="$MIN_MB" '$1/1024 >= m' | sort -rn >"$TMPD/sizes"
 NCAND=$(grep -c . "$TMPD/sizes" 2>/dev/null || echo 0)
-tickdone "$NTOP pastas medidas ($SKIPPED puladas), $NCAND acima de ${MIN_MB}MB"
+tickdone "$NTOP folders measured ($SKIPPED skipped), $NCAND above ${MIN_MB}MB"
 
 # --- 5. churn -------------------------------------------------------------------
 # What a backup costs is not the bytes a directory holds, it is the bytes that
@@ -356,14 +358,14 @@ tickdone "$NTOP pastas medidas ($SKIPPED puladas), $NCAND acima de ${MIN_MB}MB"
 # as context, rather than the other way round.
 #
 # This used to ask Spotlight, which cannot answer it: the index contains no
-# dotfiles at all. ~/.claude had 5388 files changed in a week and ~/.vscode 4625,
-# and both were reported static — the two noisiest directories on the machine,
-# silently inverted. The walk above costs a second pass over the same trees and
-# is complete.
-phase "Bytes alterados por pasta (${DAYS}d)"
+# dotfiles at all. A large agent-tooling directory had thousands of files changed
+# in a week and was reported static — one of the noisiest directories on the
+# machine, silently inverted. The walk above costs a second pass over the same
+# trees and is complete.
+phase "Bytes changed by folder (${DAYS}d)"
 cat "$TMPD"/ch.* 2>/dev/null >"$TMPD/changed"
 NREC=$(grep -c . "$TMPD/changed" 2>/dev/null || echo 0)
-note "$NREC arquivos alterados em ${DAYS}d"
+note "$NREC files changed in ${DAYS}d"
 
 # Roll each changed file's bytes into every ancestor, so a directory's churn
 # covers its whole subtree — the same semantics du gives for size.
@@ -379,12 +381,12 @@ awk '{
 } END { for (d in ch) printf "%s\t%d\t%d\n", d, ch[d], nf[d] }' \
 	"$TMPD/changed" >"$TMPD/churn"
 CHTOT=$(awk '{s += $1} END {printf "%d", s / 1048576}' "$TMPD/changed" 2>/dev/null || echo 0)
-tickdone "$NREC arquivos, ${CHTOT}MB alterados em ${DAYS}d"
+tickdone "$NREC files, ${CHTOT}MB changed in ${DAYS}d"
 
 # --- 6. join and write ----------------------------------------------------------
-phase "Consolidando o relatorio"
+phase "Assembling the report"
 
-rule "Backups no destino (precisa de Full Disk Access)"
+rule "Backups at the destination (needs Full Disk Access)"
 WAIT0=$(date +%s)
 TIMED_OUT=0
 while [ ! -f "$TMPD/backup.done" ]; do
@@ -397,84 +399,85 @@ while [ ! -f "$TMPD/backup.done" ]; do
 		TIMED_OUT=1
 		break
 	fi
-	beat "aguardando compare (${w}s de ${COMPARE_TIMEOUT}s, bloqueado em I/O)"
+	beat "waiting for compare (${w}s of ${COMPARE_TIMEOUT}s, blocked on I/O)"
 	sleep 1
 done
 if [ "$TIMED_OUT" = 1 ]; then
-	tickdone "compare abortado apos ${COMPARE_TIMEOUT}s — resto do relatorio intacto"
+	tickdone "compare aborted after ${COMPARE_TIMEOUT}s — rest of the report intact"
 else
-	tickdone "lado do backup concluido em $(($(date +%s) - WAIT0))s"
+	tickdone "backup side finished in $(($(date +%s) - WAIT0))s"
 fi
 
 if blocked "$TMPD/backups"; then
-	say "BLOQUEADO — conceda Full Disk Access ao terminal e rode de novo."
+	say "BLOCKED — grant Full Disk Access to the terminal and run again."
 	say "System Settings -> Privacy & Security -> Full Disk Access"
-	say "(sudo sozinho nao levanta: a permissao e por aplicativo, nao por usuario)"
+	say "(sudo alone does not lift it: the permission is per application, not per user)"
 	FDA=0
 else
-	say "quantidade: $(grep -c . "$TMPD/backups")"
-	say "mais antigo: $(head -1 "$TMPD/backups")"
-	say "mais recente: $(tail -1 "$TMPD/backups")"
+	say "count: $(grep -c . "$TMPD/backups")"
+	say "oldest: $(head -1 "$TMPD/backups")"
+	say "newest: $(tail -1 "$TMPD/backups")"
 	FDA=1
 fi
 
-rule "O que muda entre o backup mais recente e o disco de hoje"
+rule "What changes between the latest backup and today's disk"
 if [ "$TIMED_OUT" = 1 ]; then
-	say "ABORTADO apos ${COMPARE_TIMEOUT}s."
-	say "'tmutil compare' varre o volume inteiro contra o ultimo backup e fica"
-	say "bloqueado em I/O (CPU perto de zero), entao nao ha como saber se falta"
-	say "pouco. Rode com COMPARE_TIMEOUT=3600 se quiser esperar de verdade."
+	say "ABORTED after ${COMPARE_TIMEOUT}s."
+	say "'tmutil compare' scans the whole volume against the last backup and"
+	say "blocks on I/O (CPU near zero), so there is no way to know how much is"
+	say "left. Run with COMPARE_TIMEOUT=3600 to actually wait it out."
 elif [ "$SKIP_COMPARE" = 1 ]; then
-	say "pulado a pedido (SKIP_COMPARE=1)."
+	say "skipped on request (SKIP_COMPARE=1)."
 elif [ "$FDA" = 1 ] && [ -s "$TMPD/compare" ] && ! blocked "$TMPD/compare"; then
-	say "--- resumo ---"
+	say "--- summary ---"
 	tail -12 "$TMPD/compare" >>"$DRAFT"
 	say ""
-	say "--- 40 maiores itens alterados ---"
+	say "--- 40 largest changed items ---"
 	awk '$2 ~ /^[0-9]+$/ {printf "%s\t%s\n", $2, substr($0, index($0,$3))}' "$TMPD/compare" |
 		sort -rn | head -40 |
 		awk -F'\t' '{printf "%8.1f MB  %s\n", $1/1048576, $2}' >>"$DRAFT"
 else
-	say "pulado: depende de Full Disk Access."
+	say "skipped: depends on Full Disk Access."
 fi
 
-rule "Exclusoes ativas hoje"
-say "Dois mecanismos independentes; ler so um da resposta errada com confianca."
+rule "Active exclusions today"
+say "Two independent mechanisms; reading only one gives a confidently wrong answer."
 say ""
-say "--- SkipPaths (plist do Time Machine): $NSKIP ---"
+say "--- SkipPaths (Time Machine plist): $NSKIP ---"
 cat "$TMPD/skip" >>"$DRAFT"
 say ""
-say "--- xattr, lido direto do disco ate 5 niveis: $NEXCL ---"
-say "(nao vem do Spotlight: o indice nao tem dotfile nenhum e aqui nao"
-say " reportou nada sob ~/Library, que e justamente onde eles estao.)"
+say "--- xattr, read directly off disk up to 5 levels: $NEXCL ---"
+say "(not from Spotlight: the index has no dotfiles at all and here it"
+say " reported nothing under ~/Library, which is exactly where they are.)"
 cat "$TMPD/excl" >>"$DRAFT"
 
-rule "O que volta para o backup (lado da origem), por bytes alterados"
-say "Ordenado por MUDOU/${DAYS}d, nao por tamanho: o custo de um backup e o que"
-say "muda, nao o que existe. Uma pasta estatica de 100GB e copiada uma vez e"
-say "depois custa zero; uma de 1GB reconstruida todo dia custa toda noite."
-say "Nada nesta lista esta excluido. Minimo ${MIN_MB}MB de tamanho."
+rule "What goes back into the backup (source side), by bytes changed"
+say "Ordered by CHANGED/${DAYS}d, not by size: what a backup costs is what"
+say "changes, not what exists. A static 100GB folder is copied once and then"
+say "costs nothing; a 1GB folder rebuilt every day costs every night."
+say "Nothing on this list is excluded. Minimum size ${MIN_MB}MB."
 say ""
-say "ARQ = quantos arquivos mudaram. Muitos arquivos com poucos bytes cada e o"
-say "perfil de cache reconstruido (exclua a pasta). Poucos arquivos com muitos"
-say "bytes e um arquivo grande sendo reescrito — e nesse caso lembre que o TM"
-say "copia so os blocos alterados, entao o custo real e menor que o numero."
+say "FILES = how many files changed. Many files with few bytes each is the"
+say "profile of a rebuilt cache (exclude the folder). Few files with many"
+say "bytes is one large file being rewritten — and in that case remember TM"
+say "copies only the changed blocks, so the real cost is lower than the number."
 say ""
-say "CUIDADO: o tamanho e o da subarvore inteira, inclusive de filhas que JA"
-say "estao excluidas — MUDOU nao, esse ja desconta as filhas excluidas. Entao"
-say "uma pasta pode aparecer enorme e mudar pouco porque o caro nela ja saiu."
+say "CAUTION: SIZE is the whole subtree, including children that are ALREADY"
+say "excluded — CHANGED is not, it already discounts excluded children. So a"
+say "folder can look enormous and change little because the expensive part"
+say "of it already left."
 say ""
-say "MUDOU = ? significa que a varredura daquela pasta foi abandonada no limite"
-say "de tempo. E desconhecido, nao zero, e por isso vem no topo. Rode de novo com"
-say "SIZE_TIMEOUT maior para resolver."
+say "CHANGED = ? means that folder's walk was abandoned at the time limit."
+say "It is unknown, not zero, which is why it sorts to the top. Run again with"
+say "a larger SIZE_TIMEOUT to resolve it."
 say ""
-say " TAMANHO  MUDOU/${DAYS}d    ARQ  CAMINHO"
+say "    SIZE  CHANGED/${DAYS}d  FILES  PATH"
 
 # One awk pass over four inputs: SkipPaths to filter, churn to rank, the
 # abandoned roots to mark as unknown, sizes as the candidate set.
 #
 # A walk that was killed leaves no churn file, and without the abandoned list its
-# whole subtree would read as "0 bytes changed" — a 45 GB directory reported as
+# whole subtree would read as "0 bytes changed" — a large directory reported as
 # perfectly quiet, sorted to the bottom where nobody looks. Missing data is
 # printed as `?` and sorted to the TOP instead: not knowing is worth more
 # attention than knowing it is zero, not less.
@@ -482,8 +485,8 @@ say " TAMANHO  MUDOU/${DAYS}d    ARQ  CAMINHO"
 # -F'\t' is not cosmetic. Every one of these files is tab-separated and holds
 # paths, and awk's default splitting breaks on any whitespace: with it,
 # `~/Library/Application Support` keys as `/Users/alice/Library/Application`,
-# its churn lookup misses, and 21 GB of directory reports 0 bytes changed across
-# 0 files — while the 4905 files that did change still show up in the parent's
+# its churn lookup misses, and a large directory reports 0 bytes changed across
+# 0 files — while the files that did change still show up in the parent's
 # total. Silently, and only for paths with a space in them.
 awk -F'\t' '
 	FILENAME == abnd_f { ab[++na] = $0; next }
@@ -520,17 +523,17 @@ while IFS= read -r line; do
 	kept=$((kept + 1))
 	tick "$kept" "40" "$(basename "$p")"
 done <"$TMPD/ranked"
-tickdone "$kept candidatos apos filtrar as duas exclusoes"
+tickdone "$kept candidates after filtering both exclusion mechanisms"
 
 cat "$TMPD/final" >>"$DRAFT"
 
 # Only now does the file appear at $OUT. Interrupt the run at any point before
 # this and there is no report rather than a convincing fragment of one.
 mv "$DRAFT" "$OUT" || {
-	printf 'nao consegui escrever em %s\n' "$OUT" >&2
+	printf 'could not write to %s\n' "$OUT" >&2
 	exit 1
 }
 chown "$REAL_USER" "$OUT" 2>/dev/null || true
 
-printf '\nrelatorio salvo em: %s\n' "$OUT" >&2
-printf 'linhas: %s\n' "$(grep -c . "$OUT")" >&2
+printf '\nreport saved to: %s\n' "$OUT" >&2
+printf 'lines: %s\n' "$(grep -c . "$OUT")" >&2

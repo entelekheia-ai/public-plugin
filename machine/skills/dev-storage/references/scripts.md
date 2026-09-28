@@ -7,12 +7,17 @@ deleting it by hand is a chore that gets done once and then never again.
 This directory holds the policy as a script rather than as prose, because a policy that has to be
 remembered is a policy that decays.
 
+**The commands below run from the skill folder** — the `${CLAUDE_SKILL_DIR}` SKILL.md names, which
+resolves to wherever this skill is installed. `dev-storage/scripts/…` resolves only from one specific
+parent folder, so a command copied verbatim from here can fail to find the script; SKILL.md's own
+"Running it" section gives the braced, resolved form.
+
 ```sh
-dev-storage/scripts/dev-storage.sh report              # where the disk went
-dev-storage/scripts/dev-storage.sh exclude             # keep it out of Time Machine
-dev-storage/scripts/dev-storage.sh reclaim             # delete it, then thin snapshots
-dev-storage/scripts/dev-storage.sh reclaim --deep      # also drop builds untouched for 60 days
-dev-storage/scripts/dev-storage.sh all                 # exclude + reclaim + report
+scripts/dev-storage.sh report              # where the disk went
+scripts/dev-storage.sh exclude             # keep it out of Time Machine
+scripts/dev-storage.sh reclaim             # delete it, then thin snapshots
+scripts/dev-storage.sh reclaim --deep      # also drop builds untouched for 60 days
+scripts/dev-storage.sh all                 # exclude + reclaim + report
 ```
 
 `DEV_ROOT` selects the scan root; it defaults to `~/Development` as one example, and is meant to be
@@ -22,7 +27,7 @@ A read-only companion answers the other question — *what is Time Machine still
 should not?*
 
 ```sh
-sudo dev-storage/scripts/tm-report.sh [output-file]     # writes a report, changes nothing
+sudo scripts/tm-report.sh [output-file]     # writes a report, changes nothing
 ```
 
 It never deletes and never edits an exclusion; it produces the evidence you read before running
@@ -70,10 +75,10 @@ changed almost nothing, while a directory far down the size list was the most ex
 
 Two things follow for anyone reading the output:
 
-- **`TAMANHO` is gross and `MUDOU` is net.** Sizes include already-excluded children because `du`
-  cannot prune; churn has them pruned out. Counting them was not a rounding error — it put `~/.vscode`
-  at the top of the list on the strength of `~/.vscode/extensions`, which is already excluded.
-- **`MUDOU = ?` means unknown, not zero.** That walk hit `SIZE_TIMEOUT`. Those rows sort to the top
+- **`SIZE` is gross and `CHANGED` is net.** Sizes include already-excluded children because `du`
+  cannot prune; churn has them pruned out. Counting them was not a rounding error — it put a large directory
+  at the top of the list on the strength of an already-excluded child.
+- **`CHANGED = ?` means unknown, not zero.** That walk hit `SIZE_TIMEOUT`. Those rows sort to the top
   deliberately; re-run with a larger `SIZE_TIMEOUT` instead of drawing a conclusion.
 
 ## What was already spent
@@ -83,15 +88,12 @@ backup taken before today, and no amount of excluding will remove it. That is a 
 with a separate tool:
 
 ```sh
-sudo dev-storage/scripts/tm-inventory.sh              # what regenerable junk is inside the backup
-sudo DEEP=1 dev-storage/scripts/tm-inventory.sh       # also walk the tree for what the list missed
+sudo scripts/tm-inventory.sh              # what regenerable junk is inside the backup
+sudo DEEP=1 scripts/tm-inventory.sh       # also walk the tree for what the list missed
 ```
 
 `DEEP` must come after `sudo`, not before — macOS's default sudoers has `env_reset`, which strips
 `DEEP=1 sudo ...` before the script ever sees it.
-
-```sh
-```
 
 Also read-only. It never deletes and never runs `tmutil delete`; it prints the commands for a human
 to review, because removing something from a backup is irreversible.
@@ -142,15 +144,30 @@ Two consequences, both encoded in the script:
 
 ## What is excluded, and why that is safe
 
-Two groups, both regenerable by the tool that owns them:
+Two groups, both regenerable by the tool that owns them. Only regenerable *subfolders* are named —
+never an application root that also holds non-regenerable state (a browser profile, editor settings,
+an Xcode Archive) beside its cache:
 
 | Group | Paths |
 |---|---|
-| Global caches | `~/Library/Developer`, `~/Library/Caches`, `~/Library/pnpm/store`, `~/.npm`, `~/.bun`, `~/.cache`, `~/.rustup`, `~/.cargo/{registry,git}`, `~/go/pkg`, `~/.local/pipx`, `~/.local/share/claude` (Claude Code self-updater), `~/.litert-lm` (downloaded local model), `~/.gemini/antigravity-ide/browser_recordings` |
-| Build output under `DEV_ROOT` | `node_modules`, `target`, `.next`, `.turbo`, `.vite`, `release`, `out`, `coverage`, `dist`, `graphify-out`, `__pycache__` |
+| Global caches | `~/Library/Developer/Xcode/DerivedData`, `~/Library/Developer/Xcode/iOS DeviceSupport`, `~/Library/Caches`, `~/Library/pnpm/store`, `~/.npm`, `~/.bun`, `~/.cache`, `~/.rustup`, `~/.cargo/{registry,git}`, `~/go/pkg`, `~/.local/pipx`, `~/.local/share/claude` (Claude Code self-updater), plus whatever a `~/.config/dev-storage/config` or `DEV_STORAGE_EXTRA` names for this machine |
+| Build output under `DEV_ROOT` | `node_modules`, `target`, `.next`, `.turbo`, `.vite`, `release`, `out`, `coverage`, `dist`, `__pycache__` — but a name match alone never qualifies one: it must also sit inside a git repository whose own `.gitignore` covers it (`git check-ignore`) |
 
-Source code is never excluded — only what a build produces from it. A repository's `.git` is
-backed up normally, so history is never at risk.
+Source code is never excluded — only what a build produces from it, and only once the repository's
+own ignore rules agree it is build output. A folder named `release`, `out`, `dist` or `coverage` that
+is *tracked* (not ignored) is source, never touched. A repository's `.git` is backed up normally, so
+history is never at risk.
+
+**A build directory's staleness is judged by the newest file inside it, never by the folder's own
+mtime.** A directory's mtime changes only when an entry is added or removed at its top level, so an
+actively-edited tree with an old top-level mtime would otherwise read as abandoned.
+
+**`~/Library/Developer`, a whole browser's `Application Support/<vendor>` folder, and
+`Application Support/Code` as a whole are deliberately not in the list.** The first also holds
+`Xcode/Archives` (never regenerable); the second mixes a browser's cache with its profile, history and
+passwords, and its actual cache already lives under `~/Library/Caches` instead; the third holds
+`Code/User` (settings, keybindings, snippets). Naming the parent would silently drop the
+non-regenerable half from every future backup.
 
 **Exclusions are per-path and do not apply to directories created later.** Re-run `exclude` after
 cloning a repository or after the first install in a new package. It is idempotent.

@@ -64,8 +64,8 @@ rather than duplicating what is already there.
    command — operate on the target repo by absolute path throughout.
 2. **Type** — from the argument, else infer and confirm:
    - **publisher** — publishes packages to a registry (npm/crates/marketplace).
-   - **consumer** — depends on another workspace repo's *published* packages (check for `file:` links or
-     registry deps on workspace-published scopes).
+   - **consumer** — depends on another repository's *published* packages (check for `file:` links or
+     registry deps on scopes another repository publishes).
    - **app** — ships a runnable artifact to end users (Electron app, deployed site).
    - **plugin** — tooling consumed by the maintainer's own sessions (e.g. a Claude Code plugin).
    **Classify by what the repo does today, never by what it is expected to become.** A repo-type table can
@@ -84,8 +84,8 @@ today** — manual flows continue while `.changeset` files accumulate.
 **On a greenfield repo, Stage A installs but cannot be verified.** `changeset status` resolves the base
 branch through the remote and fails with *"Failed to find where HEAD diverged from main"* when the repo
 has no commits or no remote — so the enforcement check below is written but unproven, and the checklist's
-"a test PR without a changeset goes red" is deferred rather than passed. Say so; do not report the gate
-as working. Re-run the verification at the first push.
+verification against an existing wrong commit is deferred rather than passed, for lack of any commit to
+point it at. Say so; do not report the gate as working. Re-run the verification at the first push.
 
 **Stage A — declaration layer:**
 
@@ -115,11 +115,11 @@ as working. Re-run the verification at the first push.
 5. Migrate `CHANGELOG.md` files to the changesets-generated format outright (collapse prior history to a
    summary line; no adapter preserving the old format).
    **First establish that the `CHANGELOG.md` is even in scope.** A repo can ship more than one product
-   from one tree, and only the npm workspaces are changesets' business. In `vibe-ops`, the root
-   `CHANGELOG.md` is the *plugin's*, `plugin/` is not a workspace, and `changeset version` never touches
-   it — so this step was empty and the packages had no changelog to migrate. Say that explicitly in the
-   repo's governance. A reader who finds an unconverted `CHANGELOG.md` beside a `.changeset/` directory
-   will otherwise read it as an adoption that was abandoned halfway.
+   from one tree, and only the npm workspaces are changesets' business — a root `CHANGELOG.md` that belongs
+   to a product living outside `workspaces` is never touched by `changeset version`, so this step is empty
+   for it and there is no changelog to migrate. Say that explicitly in the repo's governance. A reader who
+   finds an unconverted `CHANGELOG.md` beside a `.changeset/` directory will otherwise read it as an
+   adoption that was abandoned halfway.
 
 **Stage B — beta channel** (requires Stage A): create the long-lived `beta` branch; on it,
 `npx changeset pre enter beta` and commit `.changeset/pre.json`. Add the forward-port workflow: on every
@@ -129,9 +129,12 @@ fossil dist-tags (needs local `npm login` — OIDC covers only `npm publish`).
 **Stage C — automated stable flow** (at a natural release moment): `changesets/action` (stable v1.x)
 opening the Version Packages PR; `version-script` syncing any versions living outside `package.json`
 (Cargo.toml, committed generated constants, lockfile); `publish-script` publishing **in dependency order**
-if the repo uses exact pins (plain `changeset publish` is concurrent and order-blind); retire per-package
-tag workflows and re-point registry Trusted Publishers at the new workflow file. Provenance under OIDC
-from a public repo is automatic — no `--provenance` flag needed.
+if the repo uses exact pins (plain `changeset publish` is concurrent and order-blind) — and, between one
+publish and the next, waiting for the published package to answer on the registry
+(`npm view <name>@<version> version`, retried for a few minutes) before publishing whatever depends on it,
+since a dependent published before its dependency's packument has propagated fails `npm install` in that
+window; retire per-package tag workflows and re-point registry Trusted Publishers at the new workflow
+file. Provenance under OIDC from a public repo is automatic — no `--provenance` flag needed.
 
 ## Consumer layer — registry canary
 
@@ -140,7 +143,7 @@ scheme leaks) are invisible through `file:` links.
 
 1. **Write a swap script** in the target repo (`scripts/canary-install.mjs` or similar — this skill does
    not ship one, the target repo owns it). Its contract: a `--channel <latest|beta>` flag; it replaces the
-   repo's `file:` links to workspace-published packages with registry installs at the given dist-tag, then
+   repo's `file:` links to another repository's published packages with registry installs at the given dist-tag, then
    runs `npm install`; and it is reversible — run it only in a throwaway checkout (CI), never against the
    maintainer's working copy.
 2. A workflow, scheduled + `workflow_dispatch`, that runs the swap and then the repo's **existing** test
@@ -165,8 +168,8 @@ this layer were skipped. Revisit (a) and (b) when a second channel actually exis
 
 **Configuration for the non-publishing case**, which the Publisher-layer Stage A above does not cover:
 take `changeset init`'s output and remove nothing — `access`, `fixed`, `linked` and `ignore` are all inert
-with one unpublished package. Two facts about private packages, both counter-intuitive, and one of them
-cost a false claim in a committed plan before it was tested:
+with one unpublished package. Two facts about private packages, both counter-intuitive and both worth
+verifying rather than assuming, since either one, taken on faith, produces a wrong write-up:
 
 - **A `"private": true` package is versioned and changelogged by default.** No configuration is required.
   `@changesets/config` (verified at 2.31.1) resolves `privatePackages` to `{ version: true, tag: false }`
@@ -197,7 +200,8 @@ plugins; verified against `claude plugin validate --strict` on the synced manife
 ## Verify before reporting done
 
 - [ ] The installed layer matches the repo's actual role(s); nothing installed "for later".
-- [ ] Publisher Stage A: a test PR without a changeset goes red; with one, green.
+- [ ] Publisher Stage A: an existing commit that touched a package without declaring anything goes red;
+      once a changeset covers it, green.
 - [ ] Consumer: canary run green against `latest`, and its logs prove registry tarballs (not `file:`).
 - [ ] Target repo's `AGENTS.md` updated to name the new layer (its own convention for where).
 - [ ] Nothing here contradicted the target repo's own governance; where it did, the repo won and this

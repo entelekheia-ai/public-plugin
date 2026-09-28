@@ -50,6 +50,7 @@ OUT=${1:-$H/tm-inventory-$(date +%Y%m%d-%H%M).txt}
 DEEP=${DEEP:-0}
 WALK_TIMEOUT=${WALK_TIMEOUT:-900}
 MIN_MB=${MIN_MB:-200}
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 TMPD=$(mktemp -d) || exit 1
 trap 'rm -rf "$TMPD"' EXIT INT TERM
@@ -82,25 +83,25 @@ rule() {
 	say "=== $* ==="
 }
 
-say "Time Machine — inventario do destino"
+say "Time Machine — destination inventory"
 say "host $(hostname -s)   user $REAL_USER   $(date)"
-say "SOMENTE LEITURA: nada e apagado por este script."
+say "READ-ONLY: nothing is deleted by this script."
 
 # --- 1. locate ------------------------------------------------------------------
-phase "Localizando o destino e os backups"
+phase "Locating the destination and the backups"
 DEST=$(tmutil destinationinfo 2>/dev/null | awk -F': +' '/Mount Point/{print $2; exit}')
 say ""
-say "destino: ${DEST:-desconhecido}"
+say "destination: ${DEST:-unknown}"
 
 tmutil listbackups >"$TMPD/backups" 2>&1
 if grep -qi 'full disk access\|operation not permitted' "$TMPD/backups"; then
-	note "BLOQUEADO: sem Full Disk Access."
-	rule "Bloqueado"
-	say "Este relatorio precisa de Full Disk Access no terminal."
-	say "Ajustes -> Privacidade e Seguranca -> Acesso Total ao Disco."
-	say "sudo NAO substitui: a permissao e por aplicativo, nao por usuario."
+	note "BLOCKED: no Full Disk Access."
+	rule "Blocked"
+	say "This report needs Full Disk Access for the terminal."
+	say "System Settings -> Privacy & Security -> Full Disk Access."
+	say "sudo does NOT substitute: the permission is per application, not per user."
 	mv "$DRAFT" "$OUT" && chown "$REAL_USER" "$OUT" 2>/dev/null
-	printf '\nrelatorio (bloqueado) em: %s\n' "$OUT" >&2
+	printf '\nreport (blocked) at: %s\n' "$OUT" >&2
 	exit 1
 fi
 
@@ -124,92 +125,99 @@ while IFS= read -r b; do
 		break
 	fi
 	SKIPPED_UNMOUNTED=$((SKIPPED_UNMOUNTED + 1))
-	beat "nao montado, tentando o anterior: $(basename "$(dirname "$b")")"
+	beat "not mounted, trying the previous one: $(basename "$(dirname "$b")")"
 done <<EOF
 $(sort -r "$TMPD/backups")
 EOF
 
 if [ -z "$LATEST" ]; then
-	note "nenhum dos $NBK backups esta montado e acessivel"
-	rule "Nenhum backup acessivel"
-	say "listbackups conhece $NBK backups, mas nenhum esta montado agora."
-	say "Os snapshots aparecem sob /Volumes/.timemachine sob demanda; abrir o"
-	say "backup no app do Time Machine costuma monta-los."
+	note "none of the $NBK backups is mounted and reachable"
+	rule "No backup reachable"
+	say "listbackups knows $NBK backups, but none is mounted right now."
+	say "Snapshots appear under /Volumes/.timemachine on demand; opening the"
+	say "backup in the Time Machine app usually mounts them."
 	mv "$DRAFT" "$OUT" && chown "$REAL_USER" "$OUT" 2>/dev/null
 	exit 1
 fi
 [ "$SKIPPED_UNMOUNTED" -gt 0 ] &&
-	note "$SKIPPED_UNMOUNTED backup(s) mais recente(s) nao montado(s) — usando o mais novo acessivel"
-note "$NBK backups; usando: $(basename "$(dirname "$LATEST")")"
+	note "$SKIPPED_UNMOUNTED more recent backup(s) not mounted — using the newest reachable one"
+note "$NBK backups; using: $(basename "$(dirname "$LATEST")")"
 
 # The mounted snapshots are visible in `mount` even without Full Disk Access,
 # which is the cheapest way to confirm the layout rather than assume it.
 say "backups: $NBK"
-say "mais antigo: $(head -1 "$TMPD/backups")"
-say "mais recente: $(tail -1 "$TMPD/backups")"
-say "analisado:   $LATEST"
+say "oldest: $(head -1 "$TMPD/backups")"
+say "newest: $(tail -1 "$TMPD/backups")"
+say "analyzed:   $LATEST"
 [ "$SKIPPED_UNMOUNTED" -gt 0 ] &&
-	say "($SKIPPED_UNMOUNTED backup(s) mais recente(s) nao estavam montados)"
+	say "($SKIPPED_UNMOUNTED more recent backup(s) were not mounted)"
 say ""
-say "--- datas ---"
+say "--- dates ---"
 sed -n 's|.*/\([0-9-]*\)\.backup/.*|\1|p' "$TMPD/backups" >>"$DRAFT"
 say ""
-say "Se todas as datas forem do mesmo dia, o destino nao carrega historico"
-say "antigo: o lixo acumulado que este relatorio procura seria pequeno, e a"
-say "exclusao na origem ja resolve o futuro."
+say "If every date is from the same day, the destination carries no old"
+say "history: the junk this report looks for would be small, and excluding"
+say "at the source already fixes the future."
 say ""
-say "--- snapshots montados agora ---"
-mount | grep -i timemachine >>"$DRAFT" 2>/dev/null || say "(nenhum montado)"
+say "--- snapshots mounted right now ---"
+mount | grep -i timemachine >>"$DRAFT" 2>/dev/null || say "(none mounted)"
 
 # --- 2. find the user's home inside the latest backup ---------------------------
-phase "Localizando a home dentro do backup"
+phase "Locating the home directory inside the backup"
 # Discover rather than assume: the volume directory inside a backup is named after
 # the source volume ("Macintosh HD - Data" and friends), which is not ours to guess.
 BHOME=$(find "$LATEST" -maxdepth 4 -type d -path "*/Users/$REAL_USER" 2>/dev/null | head -1)
 if [ -z "$BHOME" ]; then
-	note "nao encontrei Users/$REAL_USER dentro de $LATEST"
-	rule "Estrutura inesperada"
-	say "Nao localizei a home do usuario dentro do backup mais recente."
-	say "Conteudo do nivel superior:"
+	note "did not find Users/$REAL_USER inside $LATEST"
+	rule "Unexpected structure"
+	say "Did not locate the user's home inside the latest backup."
+	say "Top-level contents:"
 	find "$LATEST" -maxdepth 1 -mindepth 1 2>&1 | head -20 >>"$DRAFT"
 	mv "$DRAFT" "$OUT" && chown "$REAL_USER" "$OUT" 2>/dev/null
 	exit 1
 fi
-note "home no backup: $BHOME"
+note "home in the backup: $BHOME"
 say ""
-say "home dentro do backup: $BHOME"
+say "home inside the backup: $BHOME"
 
 # --- 3. targeted probe of the categories we already know are regenerable --------
 # Cheap and precise: ask about the paths whose answer we can act on, instead of
 # walking the whole tree to rediscover them.
-phase "Categorias reconstruiveis presentes no backup"
+#
+# Only regenerable subfolders are named here, never an application root that also
+# holds non-regenerable state (a browser profile, editor settings, an Xcode
+# Archive) — see dev-storage.sh's GLOBAL_CACHES comment for why.
+phase "Regenerable categories present in the backup"
 CANDIDATES="
-Library/Developer
+Library/Developer/Xcode/DerivedData
+Library/Developer/Xcode/iOS DeviceSupport
 Library/Caches
 Library/Application Support/Claude/vm_bundles
 Library/Application Support/com.apple.wallpaper
-Library/Application Support/Code
-Library/Application Support/Google
-Library/Application Support/Figma
+Library/Application Support/Code/Cache
+Library/Application Support/Code/CachedData
+Library/Application Support/Code/CachedExtensionVSIXs
+Library/Application Support/Code/WebStorage
+Library/Application Support/Code/DawnWebGPUCache
+Library/Application Support/Code/GPUCache
+Library/Application Support/Code/logs
+Library/Application Support/Figma/DesktopProfile
 .npm
 .bun
 .cache
 .rustup
 .cargo/registry
-.omlx
 .vscode/extensions
 go/pkg
 .local/pipx
 .local/share/claude
-.litert-lm
-.gemini/antigravity-ide/browser_recordings
 "
 : >"$TMPD/found"
 n=0
 while IFS= read -r rel; do
 	[ -n "$rel" ] || continue
 	n=$((n + 1))
-	beat "consultando $rel"
+	beat "checking $rel"
 	p="$BHOME/$rel"
 	[ -e "$p" ] || continue
 	# uniquesize is the honest number: space not shared with other backups.
@@ -227,20 +235,20 @@ while IFS= read -r rel; do
 done <<EOF
 $CANDIDATES
 EOF
-beatdone "$(grep -c . "$TMPD/found" 2>/dev/null || echo 0) de $n categorias presentes no backup"
+beatdone "$(grep -c . "$TMPD/found" 2>/dev/null || echo 0) of $n categories present in the backup"
 
-rule "Reconstruivel que esta dentro do backup"
-say "'unico' = espaco NAO compartilhado com outros backups, ou seja o que"
-say "realmente seria liberado. du sobre snapshots conta o mesmo bloco uma vez"
-say "por backup e superestima grosseiramente; por isso usamos uniquesize."
+rule "Regenerable data sitting inside the backup"
+say "'unique' = space NOT shared with other backups, i.e. what deleting it"
+say "would really free. du over snapshots counts the same block once per"
+say "backup and grossly overstates; that is why uniquesize is used instead."
 say ""
-say "COMO LER UM VALOR BAIXO: significa que este caminho e identico nos outros"
-say "backups, entao apagar de UM backup nao libera nada. NAO significa que ele"
-say "seja barato: ele continua entrando em todo backup futuro ate ser excluido"
-say "na origem. Um numero baixo aqui e argumento para excluir, nao para ignorar."
+say "HOW TO READ A LOW VALUE: it means this path is identical across the"
+say "other backups, so deleting it from ONE backup frees nothing. It does NOT"
+say "mean it is cheap: it keeps entering every future backup until excluded"
+say "at the source. A low number here argues for excluding, not for ignoring."
 say ""
-say "Uma categoria AUSENTE desta lista e uma boa noticia: quer dizer que ja esta"
-say "excluida e nao chegou ao backup."
+say "A category ABSENT from this list is good news: it means it is already"
+say "excluded and never reached the backup."
 say ""
 if [ -s "$TMPD/found" ]; then
 	# Print the raw byte count beside the MB. Rounding alone turns "a few KB",
@@ -249,23 +257,23 @@ if [ -s "$TMPD/found" ]; then
 	sort -rn "$TMPD/found" |
 		awk -F'\t' '{printf "%9.1f MB  (%s bytes)  %s\n", $1/1048576, $1, $2}' >>"$DRAFT"
 else
-	say "(nenhuma das categorias conhecidas foi encontrada)"
+	say "(none of the known categories was found)"
 fi
 
 if [ -s "$TMPD/unparsed" ]; then
 	say ""
-	say "--- uniquesize devolveu formato que nao reconheci ---"
-	say "Mande estas linhas para ajustar o parsing; nao as trate como zero."
+	say "--- uniquesize returned a format this script did not recognize ---"
+	say "Report these lines to fix the parsing; do not treat them as zero."
 	cat "$TMPD/unparsed" >>"$DRAFT"
 fi
 
 # --- 4. optional deep walk ------------------------------------------------------
-phase "Varredura da arvore do backup${DEEP:+ (DEEP=$DEEP)}"
+phase "Backup tree walk${DEEP:+ (DEEP=$DEEP)}"
 if [ "$DEEP" != 1 ]; then
-	note "pulada — use DEEP=1 para descobrir categorias que nao estao na lista"
-	rule "Varredura profunda"
-	say "Nao executada. DEEP=1 percorre a arvore do backup para achar o que a"
-	say "lista de categorias nao previu. Custa I/O no volume de backup."
+	note "skipped — use DEEP=1 to find categories the list did not predict"
+	rule "Deep walk"
+	say "Not run. DEEP=1 walks the backup tree to find what the category list"
+	say "did not predict. Costs I/O on the backup volume."
 else
 	du -kx -d 3 "$BHOME" 2>/dev/null >"$TMPD/tree.part" &
 	WP=$!
@@ -274,45 +282,45 @@ else
 		w=$(($(date +%s) - W0))
 		[ "$w" -ge "$WALK_TIMEOUT" ] && {
 			kill "$WP" 2>/dev/null
-			note "abandonada apos ${WALK_TIMEOUT}s"
+			note "abandoned after ${WALK_TIMEOUT}s"
 			break
 		}
-		beat "percorrendo a arvore do backup (${w}s de ${WALK_TIMEOUT}s)"
+		beat "walking the backup tree (${w}s of ${WALK_TIMEOUT}s)"
 		sleep 2
 	done
-	beatdone "varredura concluida"
-	rule "Maiores itens dentro do backup (tamanho logico)"
-	say "ATENCAO: este e o tamanho LOGICO, nao o espaco ocupado. Blocos"
-	say "compartilhados entre backups aparecem inteiros aqui. Use a secao"
-	say "anterior (uniquesize) para saber o que seria liberado de fato."
+	beatdone "walk finished"
+	rule "Largest items inside the backup (logical size)"
+	say "WARNING: this is the LOGICAL size, not the space occupied. Blocks"
+	say "shared between backups appear here in full. Use the section above"
+	say "(uniquesize) to know what would actually be freed."
 	say ""
 	awk -v m="$MIN_MB" '$1/1024 >= m' "$TMPD/tree.part" 2>/dev/null | sort -rn | head -40 |
 		awk '{printf "%8dM  %s\n", $1/1024, substr($0, index($0, "\t") + 1)}' >>"$DRAFT"
 fi
 
 # --- 5. the commands, for a human to read and run -------------------------------
-phase "Montando os comandos para revisao"
-rule "Comandos sugeridos — NAO executados por este script"
-say "Apagar de um backup e IRREVERSIVEL. Leia cada linha antes de rodar."
-say "'delete -p' remove um caminho do historico sem apagar backups inteiros."
+phase "Assembling the commands for review"
+rule "Suggested commands — NOT run by this script"
+say "Deleting from a backup cannot be undone. Read every line before running it."
+say "'delete -p' removes one path from the history without deleting whole backups."
 say ""
 if [ -s "$TMPD/found" ]; then
 	sort -rn "$TMPD/found" | while IFS="$(printf '\t')" read -r us rel; do
-		[ "${us:-0}" -gt 104857600 ] || continue # so acima de 100MB unicos
-		say "# libera ~$((us / 1048576)) MB"
+		[ "${us:-0}" -gt 104857600 ] || continue # only above 100MB unique
+		say "# frees ~$((us / 1048576)) MB"
 		say "sudo tmutil delete -p \"$BHOME/$rel\""
 		say ""
 	done
 else
-	say "(nada acima do limiar)"
+	say "(nothing above the threshold)"
 fi
-say "Depois de apagar, confirme que a origem esta excluida para nao voltar:"
-say "  dev-storage.sh exclude"
+say "After deleting, confirm the source is excluded so it does not come back:"
+say "  $SCRIPT_DIR/dev-storage.sh exclude"
 
 mv "$DRAFT" "$OUT" || {
-	printf 'nao consegui escrever em %s\n' "$OUT" >&2
+	printf 'could not write to %s\n' "$OUT" >&2
 	exit 1
 }
 chown "$REAL_USER" "$OUT" 2>/dev/null || true
-printf '\nrelatorio salvo em: %s\n' "$OUT" >&2
-printf 'linhas: %s\n' "$(grep -c . "$OUT")" >&2
+printf '\nreport saved to: %s\n' "$OUT" >&2
+printf 'lines: %s\n' "$(grep -c . "$OUT")" >&2

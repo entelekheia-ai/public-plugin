@@ -2,7 +2,11 @@
 
 Read this when writing a repository's `release.yml` for the first time, or when editing or debugging one
 that already publishes. It stands on its own: nothing below assumes the reader arrived through a
-particular skill.
+particular skill. Two shapes follow — one built on changesets, one by hand for a repo that versions its
+packages by hand (Step 1's other branch in the skill this reference belongs to). Changesets is optional;
+nothing below the by-hand shape depends on it.
+
+## The changesets shape
 
 Model: [`ref-id/.github/workflows/release.yml`](https://github.com/entelekheia-ai/ref-id/blob/main/.github/workflows/release.yml). It
 releases for real, and it carries fixes that a workflow written from the npm docs lacks. Copy its shape,
@@ -37,12 +41,78 @@ jobs:
         env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
 ```
 
+**What `version:` and `publish:` name.** `changesets/action` does not ship these — they are `npm run
+<name>` scripts the repository's own `package.json` declares, and the action only shells out to whichever
+script name is configured above. A repository adopting this shape adds, or already has:
+
+```jsonc
+{
+  "scripts": {
+    // consumes pending changesets into version bumps + changelogs, then syncs any version that lives
+    // outside package.json (Cargo.toml, a committed generated constant, the lockfile) — whatever that
+    // repo needs; `changeset version` alone if nothing else does
+    "version": "changeset version && node scripts/sync-versions.mjs",
+    // publishes every package in dependency order — the same loop the by-hand shape below runs directly,
+    // wrapped in a script name so the action can invoke it as `publish:`. CI has no `${CLAUDE_SKILL_DIR}`
+    // (that variable exists only inside a session with the skill loaded), so `publish-order.mjs` reaches
+    // the workflow as a file the repository commits — copied in wherever the repo keeps release tooling,
+    // `scripts/publish-order.mjs` below is one choice, not a required path
+    "release": "node scripts/publish-order.mjs . --paths | while read -r dir; do ( cd \"$dir\" && npm publish --access public ); done"
+  }
+}
+```
+
+## The by-hand shape — no changesets, versioned and tagged directly
+
+For a repository that versions its packages by hand (writes the debut version into every `package.json`
+itself, per Step 1's other branch): no Version Packages PR, no `changesets/action`, nothing above applies.
+The workflow triggers on a `v*` tag push (a maintainer decides the version and pushes the tag, which is
+now the versioning ceremony) or on `workflow_dispatch` for a manual re-run, builds and tests, then runs the
+same dependency-order publish loop Step 2 uses interactively:
+
+```yaml
+name: release
+on:
+  push: { tags: ['v*'] }
+  workflow_dispatch: {}
+concurrency: release-${{ github.ref }}
+permissions:
+  id-token: write                # the OIDC token — provenance is automatic under it, no --provenance flag
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run build && npm test       # the gate. A published version cannot be recalled.
+      - run: |
+          node scripts/publish-order.mjs . --paths | while read -r dir; do
+            ( cd "$dir" && npm publish --access public )
+          done
+```
+
+Both shapes' workflows read `publish-order.mjs` from a path inside the checkout, not from
+`${CLAUDE_SKILL_DIR}` — that variable is only set inside a session with the skill loaded, and the workflow
+runs with no plugin installed. Commit a copy into the repository (`scripts/` above, or wherever the repo
+keeps release tooling) as part of adopting this shape.
+
+There is no "did this run release" derivation to make here — the workflow only runs on a tag someone
+pushed deliberately, or a manual dispatch, so a green run published what the tag names. The rest of this
+file — the OIDC/tag/provenance traps below, and reading every registry after — applies to this shape as
+much as to the changesets one; only the two `published`-output traps in point 2 are changesets-specific.
+
 ## What this shape gets right, and the npm documentation does not show
 
 1. **`changeset publish` is concurrent and order-blind.** With exact or caret pins between the repo's own
    packages, it can publish a dependent before its dependency. Point `publish:` at a script that walks
-   the packages in dependency order. `publish-order.mjs`, beside this folder
-   (`.agents/skills/release-first-publish/publish-order.mjs`), prints that order.
+   the packages in dependency order. `publish-order.mjs`, in the skill folder this reference belongs to
+   (in CI, a copy the repository commits, since the workflow runs with no plugin installed), prints that
+   order.
 2. **`--no-git-tag` silently disables every conditional step after it.** `changesets/action@v1` derives
    its `published` output by grepping stdout for `New tag:` lines (`src/run.ts:101-165`, 1.9.0), so a run
    that published every package reports `published=false` and the release looks green with half of it
@@ -56,10 +126,10 @@ jobs:
    **That derivation has two traps of its own. The first version of `ref-id`'s step fell into the first
    one:**
    - **Poll npm; a single `npm view` right after the publish reads nothing.** The registry does not list
-     a version it accepted seconds ago. `ref-id` 0.4.0 published at 01:27:51 and was queried in the same
-     second, so the step answered "not released" and skipped the crate and the tag. Nothing failed, and
-     the three registries stayed on different versions for a week. At 0.5.0 the listing took six
-     15-second attempts, so poll for three minutes before answering "no".
+     a version it accepted seconds ago — a step that queries once in the same second the publish returns
+     answers "not released" and silently skips the tag and every other registry, and nothing fails to
+     make that visible. Listing has taken as long as six attempts fifteen seconds apart in practice, so
+     poll for three minutes before answering "no".
    - **Run the step only when `steps.changesets.outputs.hasChangesets == 'false'`, and read the version
      from `$GITHUB_SHA`** (`git show "$GITHUB_SHA:<path>/package.json"`), never from the working tree.
      With changesets pending, the action leaves the Version Packages branch checked out one version
@@ -81,8 +151,8 @@ jobs:
    **This binds every tool that creates a tag, not only a release workflow.** `tag.gpgsign` is an
    operator preference that no repository declares and no clone inherits, so the same code passes on one
    machine and fails on the next. It bites tooling rather than people, because a person reads the error
-   and a program often discards the exit code. The failure surfaced in a promulgation verb that created a
-   branch, tagged it, and reported success with a real branch and no tag.
+   and a program often discards the exit code — a script that creates a branch and tags it can report
+   success with a real branch and no tag at all, if it never checks `git tag`'s exit code.
 
 ## After a release: read every registry, not the run
 
