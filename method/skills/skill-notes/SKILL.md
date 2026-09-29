@@ -21,17 +21,23 @@ the work, in three scopes — **user** (`~/.agents/skill-notes/<skill>.md`, true
 folder name. A skill written with that contract reads them itself. This skill makes every other skill do the
 same, two ways:
 
-- **In Claude Code with this plugin installed, it already happens.** The plugin's `PostToolUse` hook
-  (matcher `Skill`, `scripts/hook-notes.sh`) runs right after any skill loads, reads that skill's three
-  notes files, and hands their text to the model beside the skill's own. Nothing to install and nothing to
-  write; it is silent when a skill has no notes, and it needs `jq` on `PATH`. **This is the mechanism that
-  works:** measured once, with a note correcting how a third-party skill checks a file, the hook made the
-  skill follow the note on every run, while the same note behind a written instruction — in the user's
-  instruction file or the system prompt, in two wordings — was followed on none.
-- **Everywhere else, a written contract, which is weaker.** A skills-only install, another coding agent, or
-  a Claude Code session without this plugin has no hook, so the next best is two sentences in the
-  instruction file each agent loads for every session, asking it to read the notes. Steps 1–3 install that,
-  where you agree; expect it to be followed sometimes rather than always.
+- **In Claude Code with this plugin installed, it already happens when the model loads a skill.** The
+  plugin's `PostToolUse` hook (matcher `Skill`, `scripts/hook-notes.sh`) runs right after the model loads
+  a skill through the Skill tool, reads that skill's three notes files, and hands their text to the model
+  beside the skill's own. Nothing to install and nothing to write; it is silent when a skill has no notes,
+  and it needs `jq` on `PATH`. **This is the mechanism that works:** measured once, with a note correcting
+  how a third-party skill checks a file, the hook made the skill follow the note on every run, while the
+  same note behind a written instruction — in the user's instruction file or the system prompt, in two
+  wordings — was followed on none. A skill you start yourself with a slash command, or one a subagent
+  preloads, may not pass through the Skill tool, and then the hook does not see it.
+
+  Because a cloned repository can commit a notes file, the hook reads one only when it is a regular file
+  with no symbolic link on its path, passes at most 16 KB of it, and labels each scope by where it came
+  from; a repository's committed notes reach the model as that repository's guidance, not as yours.
+- **Everywhere else, a written contract, which is weaker.** A skills-only install, another coding agent, a
+  Claude Code session without this plugin, or a skill started without the Skill tool has no hook, so the
+  next best is two sentences in the instruction file each agent loads for every session, asking it to read
+  the notes. Steps 1–3 install that, where you agree; expect it to be followed sometimes rather than always.
 
 **This is a target-state skill.** The target is: the written contract in the instruction file of every
 agent you use and agreed to, the current repository with its notes folder, and nothing written anywhere you
@@ -71,6 +77,10 @@ Codex it also says when an `AGENTS.override.md` would be read instead; and wheth
 ignored. In `audit` mode, report this and stop.
 
 ## Step 2 — Install the contract where the person agrees
+
+With this plugin installed in Claude Code, say first that its hook already hands skills their notes there, so
+Claude Code's own instruction file can be left out — the written contract there only adds the weaker path
+for skills started without the Skill tool.
 
 Ask, in one question, which of the files whose state is not *contract current* and whose agent is in use
 should get the contract — list each path with its state, and show the block itself so the person sees
