@@ -13,7 +13,7 @@
       "name": "delegation",
       "source": "./delegation",
       "description": "Decide where delegated work runs and on which model, and carry it across the hand-off.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "development",
       "keywords": [
         "subagents",
@@ -26,7 +26,7 @@
       "name": "method",
       "source": "./method",
       "description": "Carry a plan through its remaining tracks unattended, paced against the usage limit and the context window, with maintainer questions batched instead of asked one at a time.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "development",
       "keywords": [
         "plans",
@@ -39,7 +39,7 @@
       "name": "publishing",
       "source": "./publishing",
       "description": "Take the skills and agents you wrote for yourself and publish them without shipping what only you have.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "development",
       "keywords": [
         "publish",
@@ -72,7 +72,7 @@
       "name": "machine",
       "source": "./machine",
       "description": "Keep a development machine working: reclaim disk by excluding regenerable caches from Time Machine and thinning the snapshots that pin them, and restore the VS Code agents panel when its model picker comes up empty.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "development",
       "keywords": [
         "macos",
@@ -85,7 +85,7 @@
       "name": "release",
       "source": "./release",
       "description": "Release channels for npm packages: adopt a stable and beta channel policy, promote beta to stable, and take a never-published repository to publishing itself from CI through npm trusted publishing.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "development",
       "keywords": [
         "npm",
