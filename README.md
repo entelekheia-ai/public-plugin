@@ -1,9 +1,9 @@
-# Entelékheia plugins
+# Entelékheia skills
 
-**A catalog of small Claude Code plugins — one folder each, installable on its own.** Each plugin is a
-group of skills and, where it has them, subagents and hooks for one job: routing delegated work, carrying
-a plan across sessions, publishing your own skills, keeping a development machine working, or shipping an
-npm package on a release-channel policy.
+**Skills, subagents and hooks for agentic work, packaged as small Claude Code plugins — one folder each,
+installable on its own.** Each plugin serves one job: routing delegated work, carrying a plan across
+sessions, publishing your own skills, keeping a development machine working, or shipping an npm package on
+a release-channel policy.
 
 | Plugin | What it gives you |
 |---|---|

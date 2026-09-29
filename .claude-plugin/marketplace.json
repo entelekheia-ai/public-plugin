@@ -5,7 +5,7 @@
     "url": "https://github.com/daniloborges"
   },
   "metadata": {
-    "description": "Entelékheia — small Claude Code plugins for delegation and method, plus vibe-ops for full repository governance.",
+    "description": "Entelékheia skills — small Claude Code plugins for delegation routing, unattended plan runs, publishing your own skills, npm release channels and machine upkeep, plus vibe-ops for repository governance.",
     "version": "0.1.0"
   },
   "plugins": [
