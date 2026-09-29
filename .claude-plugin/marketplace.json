@@ -39,7 +39,7 @@
       "name": "publishing",
       "source": "./publishing",
       "description": "Take the skills and agents you wrote for yourself and publish them without shipping what only you have.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "category": "development",
       "keywords": [
         "publish",
