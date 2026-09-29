@@ -1,6 +1,6 @@
 ---
 name: skill-notes
-description: 'Let every skill you use learn from your runs without anyone editing it: install a short notes contract in the user-level instruction file of each coding agent you use, give a repository its notes folder, add the contract to a skill of your own, or gather a skill''s notes into a proposal for its maintainer. Use when you want skills from other authors to remember what your runs taught them, when a skill keeps making the same mistake here, when a plugin update wiped a fix you made inside its skill, or "/skill-notes install|adopt|propose|audit".'
+description: 'Let every skill you use learn from your runs without anyone editing it: in Claude Code this plugin hands each skill the notes written for it as it loads; for other agents, install a short notes contract in the user-level instruction file of each one you use, give a repository its notes folder, add the contract to a skill of your own, or gather a skill''s notes into a proposal for its maintainer. Use when you want skills from other authors to remember what your runs taught them, when a skill keeps making the same mistake here, when a plugin update wiped a fix you made inside its skill, or "/skill-notes install|adopt|propose|audit".'
 argument-hint: '[install | adopt <skill-folder> | propose <skill> | audit]'
 user-invocable: true
 user_invocable: true
@@ -19,17 +19,30 @@ the work, in three scopes — **user** (`~/.agents/skill-notes/<skill>.md`, true
 (`.agents/skill-notes/<skill>.md`, committed, read by everyone working in the repository) and **local**
 (`.agents/skill-notes/<skill>.local.md`, kept out of git, the default) — where `<skill>` is the skill's
 folder name. A skill written with that contract reads them itself. This skill makes every other skill do the
-same, with two lines in the instruction file each coding agent loads for every session.
+same, two ways:
 
-**This is a target-state skill.** The target is: the contract installed in the instruction file of every
+- **In Claude Code with this plugin installed, it already happens.** The plugin's `PostToolUse` hook
+  (matcher `Skill`, `scripts/hook-notes.sh`) runs right after any skill loads, reads that skill's three
+  notes files, and hands their text to the model beside the skill's own. Nothing to install and nothing to
+  write; it is silent when a skill has no notes, and it needs `jq` on `PATH`. **This is the mechanism that
+  works:** measured once, with a note correcting how a third-party skill checks a file, the hook made the
+  skill follow the note on every run, while the same note behind a written instruction — in the user's
+  instruction file or the system prompt, in two wordings — was followed on none.
+- **Everywhere else, a written contract, which is weaker.** A skills-only install, another coding agent, or
+  a Claude Code session without this plugin has no hook, so the next best is two sentences in the
+  instruction file each agent loads for every session, asking it to read the notes. Steps 1–3 install that,
+  where you agree; expect it to be followed sometimes rather than always.
+
+**This is a target-state skill.** The target is: the written contract in the instruction file of every
 agent you use and agreed to, the current repository with its notes folder, and nothing written anywhere you
 did not agree to. Running it again repairs a file whose contract text is older and changes nothing else;
-`audit` reports and writes nothing.
+`audit` reports and writes nothing. With the plugin's hook in place, the contract in Claude Code's own
+instruction file is optional — the hook already covers it there.
 
 Every write goes through `scripts/notes.sh`, one file per call, and only after you said yes to that file.
 It needs a POSIX shell and `awk`; no other tool.
 
-## The contract — what gets installed
+## The written contract — what Steps 1–3 install
 
 ```sh
 sh ${CLAUDE_SKILL_DIR}/scripts/notes.sh block
@@ -38,8 +51,8 @@ sh ${CLAUDE_SKILL_DIR}/scripts/notes.sh block
 prints it: two sentences between two marker lines. Before running any skill, read its three notes files,
 most specific winning, with `<skill>` the folder name without any `<plugin>:` prefix; after a run that
 taught something, append one dated line to the local one, creating the folder if needed; and never edit an
-installed copy of a skill, while a skill whose source the person keeps stays theirs to edit. The markers make installing twice a no-op and
-removing it exact.
+installed copy of a skill, while a skill whose source the person keeps stays theirs to edit. The markers
+make installing twice a no-op and removing it exact.
 
 ## Step 1 — See where things stand
 
@@ -121,10 +134,14 @@ itself is a second copy that drifts.
 
 ## What a hookless or skills-only install loses
 
-Nothing: this skill ships no hooks and no agents, and the contract is plain text any agent reads.
+The hook. A skills-only install (`npx skills add`) and a plugin install whose hooks are off carry no
+`PostToolUse` hook, so notes reach a skill only through the written contract of Steps 1–3, which a model
+follows sometimes rather than always. The hook also needs `jq`; without it, it stays silent.
 
 ## Checklist
 
+- [ ] In Claude Code with the plugin, the person was told the hook already applies notes, so the written
+      contract there is optional
 - [ ] `status` ran first, and its states were shown to the person
 - [ ] The block was shown before any file was written, and only the files the person named were written
 - [ ] No folder was created for an agent that is not in use
@@ -151,6 +168,9 @@ What is worth noting, in this skill:
 
 - An agent whose user-level instruction file lives somewhere this skill does not list, or moved: name the
   agent, the path, and where that path is documented.
+- A skill that ignored its notes although the hook ran (Claude Code with the plugin) — the note text, and
+  whether the model treated it as a suspicious instruction rather than a correction: a note phrased as a
+  test or a probe reads like an injection, and a careful model refuses it.
 - A skill that ignored its notes although the contract was installed — which agent, and whether the notes
   file existed under the skill's folder name or another.
 
