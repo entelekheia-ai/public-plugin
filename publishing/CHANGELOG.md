@@ -1,5 +1,11 @@
 # publishing
 
+## 0.2.1
+
+### Patch Changes
+
+- 8d46250: `publish` checks that the deny-list count matches the entries meant to be active, and scans every commit before a first public push.
+
 ## 0.2.0
 
 ### Minor Changes
