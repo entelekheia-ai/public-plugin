@@ -9,6 +9,7 @@
   "skills": [
     "./skills/run-plan",
     "./skills/route-learnings",
-    "./skills/authoring-rules"
+    "./skills/authoring-rules",
+    "./skills/skill-notes"
   ]
 }

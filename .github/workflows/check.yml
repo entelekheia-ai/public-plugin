@@ -1,0 +1,31 @@
+name: check
+
+# The catalog's gates, on every pull request and on main. The private-name gate reads a deny-list only
+# its operator holds, so here it reports SKIP; it runs, with the list, on the maintainer's machine.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm install --global @entelekheia/vibe-ops-cli@0.2.0
+      - run: vibe-ops check
+      - name: Script tests
+        run: node --test delegation/scripts/*.test.mjs delegation/skills/*/scripts/*.test.mjs
+      - name: Every changed plugin carries a changeset
+        if: github.event_name == 'pull_request'
+        run: npx changeset status --since origin/${{ github.base_ref }}
