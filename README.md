@@ -19,14 +19,14 @@ npm package on a release-channel policy.
 In Claude Code — skills **and** subagents and hooks, for the plugins that have them:
 
 ```sh
-claude plugin marketplace add entelekheia-ai/public-plugin
+claude plugin marketplace add entelekheia-ai/skills
 claude plugin install delegation@entelekheia
 ```
 
 In any agent that reads Agent Skills (Codex, Cursor, OpenCode, Gemini CLI and others) — skills only:
 
 ```sh
-npx skills add entelekheia-ai/public-plugin
+npx skills add entelekheia-ai/skills
 ```
 
 That channel carries no agents and no hooks: `delegation`'s subagents and its read-only guard,

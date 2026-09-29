@@ -1,7 +1,7 @@
 # AGENTS.md — public-plugin
 
 The `entelekheia` Claude Code marketplace: small plugins, one folder each, installable with
-`claude plugin marketplace add entelekheia-ai/public-plugin` or, skills only, `npx skills add entelekheia-ai/public-plugin`.
+`claude plugin marketplace add entelekheia-ai/skills` or, skills only, `npx skills add entelekheia-ai/skills`.
 
 | Folder | Plugin | Holds |
 |---|---|---|
