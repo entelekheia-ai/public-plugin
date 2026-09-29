@@ -1,5 +1,11 @@
 # delegation
 
+## 0.2.1
+
+### Patch Changes
+
+- b603176: `audit-delegations` points at the catalog repository by its new name, `entelekheia-ai/skills`.
+
 ## 0.2.0
 
 ### Minor Changes

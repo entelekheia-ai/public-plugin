@@ -1,6 +1,6 @@
 {
   "name": "delegation",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Decide where delegated work runs and on which model, and carry it across the hand-off.",
   "author": {
     "name": "Danilo Borges",
