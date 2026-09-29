@@ -1,5 +1,5 @@
 {
-  "id": "public-plugin",
+  "id": "skills",
   "version": "1.0.0",
   "summary": "This catalog own invariants: manifest versions agree, claude plugin validate passes, LICENSE is verbatim Apache-2.0, no private term leaks, and every skills SKILL.md frontmatter is complete.",
   "gates": [
