@@ -43,7 +43,9 @@ published file. That is one check, and it matters more than any other in this sk
   and watch it fail, then remove the temporary list. A glob like `**/*` skips dot-directories in most
   tools, and those are exactly where every plugin manifest lives: a scan proven on an ordinary file can
   still be blind to all of them. A deny-list that loaded zero patterns — wrong separator,
-  CRLF line endings, only comments — can report clean while checking nothing. Check it counts entries.
+  CRLF line endings, only comments — can report clean while checking nothing. Check it counts entries,
+  and that the count matches the entries you meant to be active: a list with most of its lines commented
+  out loads a few patterns, looks alive, and misses exactly the names you commented away.
 
 Also useful, not required: `claude plugin validate <path> --strict` on the catalog and on each plugin, and
 `npx skills add <catalog> --list` to see what a skills-only install would get.
@@ -209,6 +211,10 @@ For a plugin that other harnesses should install too, add the manifest they read
 - **Commit**, then tag if the catalog tags releases: `claude plugin tag <plugin-path>` writes
   `<name>--v<version>` on the current commit, and refuses while changes are uncommitted — forcing it tags
   the previous commit with the new version.
+- **Before the first push to a public repository, scan every commit, not only the tree.** A name a later
+  commit removed is still in the history a public push publishes; run the deny-list over
+  `git rev-list --all` (printing the commit and file, never the matched text), and rewrite the history
+  with `git filter-repo` while nothing has been pushed yet — afterwards it costs a force-push.
 - **Stop before the push.** Publishing the branch is the maintainer's act.
 
 ## Checklist
