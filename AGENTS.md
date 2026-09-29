@@ -45,8 +45,6 @@ The `entelekheia` Claude Code marketplace: small plugins, one folder each, insta
   by name for the ops runner's own `--fix` either. `scripts/sync-versions.mjs` stays the repair.
 - **Every change to a plugin carries a changeset** (`npx changeset`), written when the change is made. A new
   plugin folder is added to `workspaces` in the root `package.json` and to the catalog in the same change.
-- **`changeset version` has not run yet**, so no plugin has a `CHANGELOG.md`; that is expected until the
-  first release.
 - **Before a release, each plugin being released has been used on real work since its last release.**
   The catalog has no downstream test suite; that use is the gate.
 
