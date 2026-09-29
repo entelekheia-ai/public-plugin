@@ -25,7 +25,7 @@
 //
 // NOT FIXABLE, ON PURPOSE. `vibe-ops check` never forwards `--fix` to a composed ops, and a LOCAL ops
 // — declared as a relative `./.vibe-ops/ops.json`, the shape this repository uses — cannot be
-// addressed by name for the ops runner's own `--fix` either (`vibe-ops public-plugin` and
+// addressed by name for the ops runner's own `--fix` either (`vibe-ops skills` and
 // `vibe-ops ./.vibe-ops/ops.json` both refuse). Measured against vibe-ops 0.2.0. So
 // `scripts/sync-versions.mjs` stays: this gate is the detector `npm run version` had none of before,
 // not a replacement for the repair.

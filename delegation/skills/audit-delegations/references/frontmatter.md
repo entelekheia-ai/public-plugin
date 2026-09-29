@@ -51,7 +51,7 @@ one that must parse something **MUST** live in a tested script.
 sit in that plugin's own `scripts/` folder, reached as `../../scripts/` from this skill's folder (the
 one SKILL.md names); in a skills-only install
 (`npx skills add`), the plugin's `scripts/` and `hooks/` folders are not fetched, so copy both files by
-hand from the catalog repository, `entelekheia-ai/public-plugin` on GitHub, folder `delegation/scripts/`.
+hand from the catalog repository, `entelekheia-ai/skills` on GitHub, folder `delegation/scripts/`.
 Either way, copy both into the repository — `scripts/agent-hooks/git-read-only.mjs` and
 `scripts/agent-hooks/git-read-only.test.mjs` is one suggested location, not a prescription; wherever they
 land, call them through `$CLAUDE_PROJECT_DIR` with the agent's name, wrapped in the fallback shown below —

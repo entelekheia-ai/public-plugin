@@ -144,7 +144,7 @@ agent the guard goes in the plugin's own `hooks/hooks.json` instead, as a `PreTo
 when the payload's `agent_type` names the agent — this plugin's own `${CLAUDE_SKILL_DIR}/../../hooks/hooks.json` and
 `${CLAUDE_SKILL_DIR}/../../scripts/guard.mjs` are a working example, both outside this skill's own folder.
 A skills-only install (`npx skills add`) fetches this skill's folder only, not the plugin's `hooks/` and
-`scripts/`; copy both by hand from the catalog repository, `entelekheia-ai/public-plugin` on GitHub, folder
+`scripts/`; copy both by hand from the catalog repository, `entelekheia-ai/skills` on GitHub, folder
 `delegation/hooks/` and `delegation/scripts/`.
 
 A second reason favours a subagent even for a short fixed half: **an `effort` level reaches a subagent

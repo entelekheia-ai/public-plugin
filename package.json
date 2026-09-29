@@ -1,5 +1,5 @@
 {
-  "name": "entelekheia-public-plugin",
+  "name": "entelekheia-skills",
   "private": true,
   "workspaces": [
     "delegation",
